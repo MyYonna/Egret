@@ -65,8 +65,8 @@ class Main extends egret.DisplayObjectContainer {
     private async runGame() {
         await this.loadResource()
         this.createGameScene();
-        const result = await RES.getResAsync("description_json")
-        this.startAnimation(result);
+        // const result = await RES.getResAsync("description_json")
+        // this.startAnimation(result);
         await platform.login();
         const userInfo = await platform.getUserInfo();
         console.log(userInfo);
@@ -78,7 +78,7 @@ class Main extends egret.DisplayObjectContainer {
             const loadingView = new LoadingUI();
             this.stage.addChild(loadingView);
             await RES.loadConfig("resource/default.res.json", "resource/");
-            await RES.loadGroup("preload", 0, loadingView);
+            await RES.loadGroup("heros", 0, loadingView);
             this.stage.removeChild(loadingView);
         }
         catch (e) {
@@ -92,60 +92,74 @@ class Main extends egret.DisplayObjectContainer {
      * 创建游戏场景
      * Create a game scene
      */
+    private times:number;
     private createGameScene() {
-        let sky = this.createBitmapByName("bg_jpg");
-        this.addChild(sky);
-        let stageW = this.stage.stageWidth;
-        let stageH = this.stage.stageHeight;
-        sky.width = stageW;
-        sky.height = stageH;
+        var bg:egret.Shape = new egret.Shape;
+        bg.graphics.beginFill(0x3384b3,1);
+        bg.graphics.drawRect(0,0,this.stage.stageWidth,this.stage.stageHeight);
+        bg.graphics.endFill();
+        this.addChild(bg);
 
-        let topMask = new egret.Shape();
-        topMask.graphics.beginFill(0x000000, 0.5);
-        topMask.graphics.drawRect(0, 0, stageW, 172);
-        topMask.graphics.endFill();
-        topMask.y = 33;
-        this.addChild(topMask);
-
-        let icon = this.createBitmapByName("egret_icon_png");
-        this.addChild(icon);
-        icon.x = 26;
-        icon.y = 33;
-
-        let line = new egret.Shape();
-        line.graphics.lineStyle(2, 0xffffff);
-        line.graphics.moveTo(0, 0);
-        line.graphics.lineTo(0, 117);
-        line.graphics.endFill();
-        line.x = 172;
-        line.y = 61;
-        this.addChild(line);
-
-
-        let colorLabel = new egret.TextField();
-        colorLabel.textColor = 0xffffff;
-        colorLabel.width = stageW - 172;
-        colorLabel.textAlign = "center";
-        colorLabel.text = "Hello Egret";
-        colorLabel.size = 24;
-        colorLabel.x = 172;
-        colorLabel.y = 80;
-        this.addChild(colorLabel);
-
-        let textfield = new egret.TextField();
-        this.addChild(textfield);
-        textfield.alpha = 0;
-        textfield.width = stageW - 172;
-        textfield.textAlign = egret.HorizontalAlign.CENTER;
-        textfield.size = 24;
-        textfield.textColor = 0xffffff;
-        textfield.x = 172;
-        textfield.y = 135;
-        this.textfield = textfield;
-
-
+        var jieGeng:egret.Bitmap = new egret.Bitmap(RES.getRes("JieGeng"));
+        this.divideImgRes(jieGeng);
     }
 
+    private divideImgRes(img:egret.Bitmap){
+        var dImgW = img.width/4;
+        var dImgH = img.height/4;
+        for(var i=0;i<4;i++){
+            for(var j=0;j<4;j++){
+                var renderTexture: egret.RenderTexture = new egret.RenderTexture(); 
+                renderTexture.drawToTexture(img,new egret.Rectangle(i*dImgW,j*dImgH,dImgH,dImgH)); 
+                var jieGeng1:egret.Bitmap = new egret.Bitmap(renderTexture);
+                jieGeng1.x = (i*dImgW+10);
+                jieGeng1.y = (j*dImgH+10);
+                this.addChild(jieGeng1);
+                jieGeng1.touchEnabled = true;
+                jieGeng1.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
+                jieGeng1.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
+            }
+        }
+    }
+
+    private _touchStatus:boolean = false;
+    private _distance:egret.Point = new egret.Point();
+    private mouseDown(evt:egret.TouchEvent ):void{
+        var target = evt.currentTarget;
+        this._touchStatus = true;
+        this._distance.x = evt.stageX - target.x;
+        this._distance.y = evt.stageY - target.y;
+        target.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.mouseMove, this);
+    }
+
+    private mouseMove(evt:egret.TouchEvent){
+         var target = evt.currentTarget;
+        if( this._touchStatus )
+        {
+            target.x = evt.stageX - this._distance.x;
+            target.y = evt.stageY - this._distance.y;
+        }
+    }
+
+    private mouseUp(evt:egret.TouchEvent ):void{
+        this._touchStatus = false;
+        var target = evt.currentTarget;
+        target.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.mouseMove, this);
+    }
+    
+    private _iTouchCollideStatus:number;
+    private _bShapeTest:boolean;
+
+    private touchHandler(evt:egret.TouchEvent):void{
+        var text:egret.TextField = evt.currentTarget;
+        text.textColor = 0x00ff00;
+    }
+    private checkHit(target:egret.Bitmap,source:egret.Bitmap){
+       var  rect1= new egret.Rectangle(target.x,target.y,target.width,target.height);
+
+       var rect2= new egret.Rectangle(source.x,source.y,source.width,source.height);
+      console.log( rect1.intersects (rect2));
+    }
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
      * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
