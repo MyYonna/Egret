@@ -92,6 +92,20 @@ var LoadingUI = (function (_super) {
     return LoadingUI;
 }(egret.Sprite));
 __reflect(LoadingUI.prototype, "LoadingUI", ["RES.PromiseTaskReporter"]);
+var RectInfo = (function () {
+    function RectInfo(x, y, width, height) {
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+    return RectInfo;
+}());
+__reflect(RectInfo.prototype, "RectInfo");
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-present, Egret Technology.
@@ -120,10 +134,19 @@ __reflect(LoadingUI.prototype, "LoadingUI", ["RES.PromiseTaskReporter"]);
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
+///<reference path="RectInfo.ts"/>
+var APP_BG_COLOR = 0x87A09D; //小程序的背景颜色
+var PF_BG_COLOR = 0xC7C7C7; //相框背景颜色
+var PF_BR_COLOR = 0x0C0C0C; //相框边框
+var PF_BR_WIDTH = 10;
 var Main = (function (_super) {
     __extends(Main, _super);
     function Main() {
         var _this = _super.call(this) || this;
+        //将文件划分成4*4的矩阵
+        _this.sub_imgs = [];
+        _this.sub_rects = [];
+        //鼠标按下,使目标图像处于最高深度，得到鼠标按下的位置与图像的起始位置的偏移
         _this._touchStatus = false;
         _this._distance = new egret.Point();
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
@@ -197,53 +220,135 @@ var Main = (function (_super) {
         });
     };
     Main.prototype.createGameScene = function () {
+        var stageWidth = this.stage.stageWidth;
+        var stageHeight = this.stage.stageHeight;
         var bg = new egret.Shape;
-        bg.graphics.beginFill(0x3384b3, 1);
-        bg.graphics.drawRect(0, 0, this.stage.stageWidth, this.stage.stageHeight);
+        bg.graphics.beginFill(APP_BG_COLOR, 1); //设置APP背景
+        bg.graphics.drawRect(0, 0, stageWidth, stageHeight);
         bg.graphics.endFill();
         this.addChild(bg);
-        var jieGeng = new egret.Bitmap(RES.getRes("JieGeng"));
-        this.divideImgRes(jieGeng);
+        //获取文件资源
+        this.jieGeng = new egret.Bitmap(RES.getRes("JieGeng"));
+        var jieGeng = this.jieGeng;
+        var photoFrame = new egret.Shape();
+        var photoFrameW = stageWidth - 100;
+        var photoFrameH = photoFrameW;
+        photoFrame.graphics.beginFill(PF_BG_COLOR, 1); //设置相框背景
+        //重新设置锚点
+        photoFrame.anchorOffsetX = photoFrameW / 2;
+        photoFrame.anchorOffsetY = photoFrameH / 2;
+        photoFrame.graphics.lineStyle(PF_BR_WIDTH, PF_BR_COLOR); //设置相框的边框
+        photoFrame.graphics.drawRect(stageWidth / 2, stageHeight / 2, photoFrameW, photoFrameH);
+        photoFrame.graphics.endFill();
+        var jieGengW = jieGeng.width;
+        var jieGengH = jieGeng.height;
+        jieGeng.anchorOffsetX = jieGengW / 2;
+        jieGeng.anchorOffsetY = jieGengH / 2;
+        jieGeng.x = stageWidth / 2;
+        jieGeng.y = stageHeight / 2;
+        // jieGeng.scale9Grid = new egret.Rectangle( 20,20,jieGengW,jieGengH );
+        this.addChild(photoFrame);
+        this.addChild(jieGeng);
+        //为图片加上touch事件
+        jieGeng.touchEnabled = true;
+        jieGeng.addEventListener(egret.TouchEvent.TOUCH_TAP, this.imageTouchListener, this);
+    };
+    Main.prototype.imageTouchListener = function (evt) {
+        //将文件资源进行等分
+        var target = evt.currentTarget;
+        this.removeChild(target);
+        this.divideImgRes(target);
     };
     Main.prototype.divideImgRes = function (img) {
         var dImgW = img.width / 4;
         var dImgH = img.height / 4;
+        var _distanceX = (this.stage.stageWidth - img.width) / 2;
+        var _distanceY = (this.stage.stageHeight - img.height) / 2;
         for (var i = 0; i < 4; i++) {
             for (var j = 0; j < 4; j++) {
+                if (i == 3 && j == 3) {
+                    break;
+                }
                 var renderTexture = new egret.RenderTexture();
-                renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgH, dImgH));
-                var jieGeng1 = new egret.Bitmap(renderTexture);
-                jieGeng1.x = (i * dImgW + 10);
-                jieGeng1.y = (j * dImgH + 10);
-                this.addChild(jieGeng1);
-                jieGeng1.touchEnabled = true;
-                jieGeng1.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
-                jieGeng1.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
+                renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH));
+                var sub_img = new egret.Bitmap(renderTexture);
+                sub_img.x = _distanceX + (i * (dImgW + 2));
+                sub_img.y = _distanceY + (j * (dImgH + 2));
+                this.addChild(sub_img);
+                sub_img.touchEnabled = true;
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.mouseMove, this);
+                var sub_rect = new egret.Rectangle(sub_img.x, sub_img.y, sub_img.width, sub_img.height);
+                this.sub_rects.push(sub_rect);
+                this.sub_imgs.push(sub_img);
             }
         }
     };
     Main.prototype.mouseDown = function (evt) {
-        var target = evt.currentTarget;
+        this.target = evt.currentTarget;
+        this.setChildIndex(this.target, this.numChildren - 1);
         this._touchStatus = true;
-        this._distance.x = evt.stageX - target.x;
-        this._distance.y = evt.stageY - target.y;
-        target.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.mouseMove, this);
+        this._distance.x = evt.stageX - this.target.x;
+        this._distance.y = evt.stageY - this.target.y;
     };
+    //移动鼠标
     Main.prototype.mouseMove = function (evt) {
-        var target = evt.currentTarget;
-        if (this._touchStatus) {
-            target.x = evt.stageX - this._distance.x;
-            target.y = evt.stageY - this._distance.y;
+        //console.log(Date.parse(new Date().toString()) )
+        var target = this.target;
+        var moveY = evt.stageY;
+        var moveX = evt.stageX;
+        var oldRx;
+        var oldRy;
+        if (Math.abs(moveY - (this._distance.y + target.y)) > Math.abs(moveX - (this._distance.x + target.x))) {
+            moveX = this._distance.x + target.x;
         }
+        else {
+            moveY = this._distance.y + target.y;
+        }
+        //当按下了屏幕，循环已经存在的图像列表，遍历，判定是否重叠。
+        if (this._touchStatus) {
+            var targetRect;
+            var sourceRect;
+            var flag = true;
+            for (var i = 0; i < this.sub_imgs.length; i++) {
+                if (this.sub_imgs[i] != target) {
+                    sourceRect = this.sub_rects[i];
+                    if (targetRect != null) {
+                        console.log(this.checkHit(targetRect, sourceRect));
+                        if (this.checkHit(targetRect, sourceRect)) {
+                            flag = false;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    targetRect = this.sub_rects[i];
+                    oldRx = targetRect.x;
+                    oldRy = targetRect.y;
+                    targetRect.x = moveX - this._distance.x;
+                    targetRect.y = moveY - this._distance.y;
+                    i = 0;
+                }
+            }
+            if (flag) {
+                target.x = moveX - this._distance.x;
+                target.y = moveY - this._distance.y;
+            }
+            else {
+                this._touchStatus = false;
+                targetRect.x = oldRx;
+                targetRect.y = oldRy;
+            }
+        }
+        // console.log(new Date().toString())
     };
+    //鼠标弹起
     Main.prototype.mouseUp = function (evt) {
         this._touchStatus = false;
-        var target = evt.currentTarget;
-        target.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.mouseMove, this);
     };
-    Main.prototype.touchHandler = function (evt) {
-        var text = evt.currentTarget;
-        text.textColor = 0x00ff00;
+    Main.prototype.checkHit = function (targetRect, sourceRect) {
+        return targetRect.intersects(sourceRect);
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
