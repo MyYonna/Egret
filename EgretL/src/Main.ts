@@ -26,27 +26,21 @@
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
-///<reference path="RectInfo.ts"/>
 const APP_BG_COLOR: number = 0x87A09D;//小程序的背景颜色
 const PF_BG_COLOR:number = 0xC7C7C7;//相框背景颜色
 const PF_BR_COLOR:number = 0x0C0C0C;//相框边框
 const PF_BR_WIDTH:number = 10;
-class Main extends egret.DisplayObjectContainer {
+
+const APP_NEXT_STATION:string = "next_station";
+const APP_WAIT_STASTIC:string = "wait_stastic";
+class Main extends eui.UILayer {
 
 
-    public constructor() {
-        super();
-        this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
-    }
-
-    private onAddToStage(event: egret.Event) {
+    protected createChildren(): void {
+        super.createChildren();
 
         egret.lifecycle.addLifecycleListener((context) => {
             // custom lifecycle plugin
-
-            context.onUpdate = () => {
-
-            }
         })
 
         egret.lifecycle.onPause = () => {
@@ -57,19 +51,23 @@ class Main extends egret.DisplayObjectContainer {
             egret.ticker.resume();
         }
 
+        //inject the custom material parser
+        //注入自定义的素材解析器
+        let assetAdapter = new AssetAdapter();
+        egret.registerImplementation("eui.IAssetAdapter", assetAdapter);
+        egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
+
+
         this.runGame().catch(e => {
             console.log(e);
         })
-
-
-
     }
 
     private async runGame() {
         await this.loadResource()
         this.createGameScene();
-        // const result = await RES.getResAsync("description_json")
-        // this.startAnimation(result);
+        const result = await RES.getResAsync("description_json")
+        this.startAnimation(result);
         await platform.login();
         const userInfo = await platform.getUserInfo();
         console.log(userInfo);
@@ -81,15 +79,27 @@ class Main extends egret.DisplayObjectContainer {
             const loadingView = new LoadingUI();
             this.stage.addChild(loadingView);
             await RES.loadConfig("resource/default.res.json", "resource/");
-            await RES.loadGroup("heros", 0, loadingView);
+            await RES.loadGroup("preload", 0, loadingView);
+            await RES.loadGroup("icons", 0, loadingView);
+
+            await this.loadTheme();
             this.stage.removeChild(loadingView);
         }
         catch (e) {
             console.error(e);
         }
     }
+    private loadTheme() {
+        return new Promise((resolve, reject) => {
+            // load skin theme configuration file, you can manually modify the file. And replace the default skin.
+            //加载皮肤主题配置文件,可以手动修改这个文件。替换默认皮肤。
+            let theme = new eui.Theme("resource/default.thm.json", this.stage);
+            theme.addEventListener(eui.UIEvent.COMPLETE, () => {
+                resolve();
+            }, this);
 
-    private textfield: egret.TextField;
+        })
+    }
 
     /**
      * 创建游戏场景
@@ -101,7 +111,6 @@ class Main extends egret.DisplayObjectContainer {
         //背景
         var stageWidth = this.stage.stageWidth;
         var stageHeight = this.stage.stageHeight;
-        // var bg:egret.Shape = new egret.Shape;
         var bg:egret.Sprite = new egret.Sprite();
         bg.graphics.beginFill(APP_BG_COLOR,1);//设置APP背景
        
@@ -109,12 +118,11 @@ class Main extends egret.DisplayObjectContainer {
         bg.graphics.endFill();
         this.addChild(bg);
 
-
-
-
         var photoFrame:egret.Sprite = new PhotoFrame(bg);
         var photo:egret.Sprite = new Photo(photoFrame);
-
+        photo.addEventListener(CompleteEvent.Result,this.CompleteStation,this);
+        this.textfield = new egret.TextField();
+        this.addChild(this.textfield)
     }
 
 
@@ -123,13 +131,81 @@ class Main extends egret.DisplayObjectContainer {
     private _iTouchCollideStatus:number;
     private _bShapeTest:boolean;
 
+    //拼图完成后，接收事件，并进行处理
+    private CompleteStation(evt:CompleteEvent){
+        var stageWidth = this.stage.stageWidth;
+        var stageHeight = this.stage.stageHeight;
+        var bg:egret.Sprite = new egret.Sprite();
+        bg.graphics.beginFill(APP_BG_COLOR,0.6);//设置APP背景
+       
+        bg.graphics.drawRect(0,0,stageWidth,stageHeight);
+        bg.graphics.endFill();
+        this.addChild(bg);
+
+        var wait_panel = new eui.Panel();
+        wait_panel.title = "破关";
+        wait_panel.horizontalCenter = 0;
+        wait_panel.verticalCenter = 0;
+        wait_panel.elementsContent = [];
+        
+         this.addChild(wait_panel);
+        
+        var contentArea:eui.Group = new eui.Group();
+        
+        var wait_stastic:egret.Bitmap = this.createBitmapByName(APP_WAIT_STASTIC);
+        var ratio = (wait_panel.width)/wait_stastic.width;
+        wait_stastic.scaleX = ratio;
+        wait_stastic.scaleY = ratio;
+        wait_stastic.x = 0;
+        wait_stastic.y = 0;
+        contentArea.addChild(wait_stastic);
 
 
+
+
+        var next_button:eui.Button = new eui.Button();
+        next_button.label = "下一关";
+        next_button.width = 100;
+        next_button.x = wait_panel.width-next_button.width;
+        next_button.y = wait_stastic.height * ratio;
+        console.log(wait_panel.width-next_button.width, wait_stastic.height * ratio)
+
+        contentArea.layout = new eui.BasicLayout();
+        contentArea.width = wait_panel.width;
+        contentArea.height = next_button.height+wait_stastic.height * ratio+wait_panel.moveArea.height;
+        contentArea.x = 0;
+        contentArea.y = wait_panel.moveArea.height;
+        contentArea.addChild(next_button);
+
+        wait_panel.elementsContent = [contentArea];
+       
+        //添加一个下一关的按钮，并注册监听
+        var next_station:egret.Bitmap = this.createBitmapByName(APP_NEXT_STATION);
+        next_station.scaleX = 0.1;
+        next_station.scaleY = 0.1;
+        next_station.x = stageWidth - (next_station.width*next_station.scaleX+50);
+        next_station.y = stageHeight - (next_station.height*next_station.scaleY+50);
+        next_station.touchEnabled = true;
+        next_station.addEventListener(egret.TouchEvent.TOUCH_BEGIN,function(){
+            next_station.scaleX = 0.15;
+            next_station.scaleY = 0.15;
+            next_station.x = stageWidth - (next_station.width*next_station.scaleX+50);
+            next_station.y = stageHeight - (next_station.height*next_station.scaleY+50);
+        },this)
+        next_station.addEventListener(egret.TouchEvent.TOUCH_END,function(){
+            next_station.scaleX = 0.1;
+            next_station.scaleY = 0.1;
+            next_station.x = stageWidth - (next_station.width*next_station.scaleX+50);
+            next_station.y = stageHeight - (next_station.height*next_station.scaleY+50);
+        },this)
+        bg.addChild(next_station);
+
+    }
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
      * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
      */
-    private createBitmapByName(name: string) {
+    private createBitmapByName(name: string):egret.Bitmap {
         let result = new egret.Bitmap();
         let texture: egret.Texture = RES.getRes(name);
         result.texture = texture;
@@ -140,6 +216,8 @@ class Main extends egret.DisplayObjectContainer {
      * 描述文件加载成功，开始播放动画
      * Description file loading is successful, start to play the animation
      */
+    
+    private textfield: egret.TextField;
     private startAnimation(result: string[]) {
         let parser = new egret.HtmlTextParser();
 
