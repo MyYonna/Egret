@@ -300,18 +300,17 @@ var Main = (function (_super) {
         var photoFrame = new PhotoFrame(bg);
         var photo = new Photo(photoFrame);
         photo.addEventListener(CompleteEvent.Result, this.CompleteStation, this);
-        this.textfield = new egret.TextField();
-        this.addChild(this.textfield);
     };
     //拼图完成后，接收事件，并进行处理
     Main.prototype.CompleteStation = function (evt) {
         var stageWidth = this.stage.stageWidth;
         var stageHeight = this.stage.stageHeight;
-        var bg = new egret.Sprite();
-        bg.graphics.beginFill(APP_BG_COLOR, 0.6); //设置APP背景
-        bg.graphics.drawRect(0, 0, stageWidth, stageHeight);
-        bg.graphics.endFill();
-        this.addChild(bg);
+        var mask = new egret.Sprite();
+        mask.graphics.beginFill(APP_BG_COLOR, 0.6); //设置APP背景
+        mask.graphics.drawRect(0, 0, stageWidth, stageHeight);
+        mask.graphics.endFill();
+        this.addChild(mask);
+        this.createNextIcon(mask);
         var wait_panel = new eui.Panel();
         wait_panel.title = "破关";
         wait_panel.horizontalCenter = 0;
@@ -331,14 +330,37 @@ var Main = (function (_super) {
         next_button.width = 100;
         next_button.x = wait_panel.width - next_button.width;
         next_button.y = wait_stastic.height * ratio;
-        console.log(wait_panel.width - next_button.width, wait_stastic.height * ratio);
+        contentArea.addChild(next_button);
+        next_button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.nextListener, this);
+        var redo_button = new eui.Button();
+        redo_button.label = "重玩";
+        redo_button.width = 100;
+        redo_button.x = 0;
+        redo_button.y = wait_stastic.height * ratio;
+        contentArea.addChild(redo_button);
+        redo_button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.redoListener, this);
         contentArea.layout = new eui.BasicLayout();
         contentArea.width = wait_panel.width;
         contentArea.height = next_button.height + wait_stastic.height * ratio + wait_panel.moveArea.height;
         contentArea.x = 0;
         contentArea.y = wait_panel.moveArea.height;
-        contentArea.addChild(next_button);
         wait_panel.elementsContent = [contentArea];
+        wait_panel.closeButton.addEventListener(egret.TouchEvent.TOUCH_TAP, function () {
+            this.removeChild(mask);
+        }, this);
+    };
+    Main.prototype.redoListener = function () {
+        this.removeChildren();
+        this.createGameScene();
+    };
+    Main.prototype.nextListener = function () {
+        this.removeChildren();
+        this.createGameScene();
+    };
+    //创建下一个按钮
+    Main.prototype.createNextIcon = function (mask) {
+        var stageWidth = this.stage.stageWidth;
+        var stageHeight = this.stage.stageHeight;
         //添加一个下一关的按钮，并注册监听
         var next_station = this.createBitmapByName(APP_NEXT_STATION);
         next_station.scaleX = 0.1;
@@ -351,6 +373,7 @@ var Main = (function (_super) {
             next_station.scaleY = 0.15;
             next_station.x = stageWidth - (next_station.width * next_station.scaleX + 50);
             next_station.y = stageHeight - (next_station.height * next_station.scaleY + 50);
+            this.nextListener();
         }, this);
         next_station.addEventListener(egret.TouchEvent.TOUCH_END, function () {
             next_station.scaleX = 0.1;
@@ -358,7 +381,7 @@ var Main = (function (_super) {
             next_station.x = stageWidth - (next_station.width * next_station.scaleX + 50);
             next_station.y = stageHeight - (next_station.height * next_station.scaleY + 50);
         }, this);
-        bg.addChild(next_station);
+        mask.addChild(next_station);
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。

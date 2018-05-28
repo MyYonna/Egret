@@ -302,10 +302,12 @@ generateEUI.paths['resource/eui_skins/ButtonSkin.exml'] = window.skins.ButtonSki
 	_proto.closeButton_i = function () {
 		var t = new eui.Button();
 		this.closeButton = t;
+		t.anchorOffsetX = 0;
 		t.height = 45;
 		t.label = "x";
 		t.right = 0;
 		t.top = 0;
+		t.width = 45;
 		return t;
 	};
 	return PanelSkin;
