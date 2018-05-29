@@ -157,6 +157,7 @@ var Main = (function (_super) {
                     case 4:
                         userInfo = _a.sent();
                         console.log(userInfo);
+                        this.preview();
                         return [2 /*return*/];
                 }
             });
@@ -282,6 +283,36 @@ var Main = (function (_super) {
         this.current_station_character_index--;
         this.removeChildren();
         this.createGameScene();
+    };
+    Main.prototype.preview = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var preview_img, scale, circle;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, RES.getResAsync(CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index)];
+                    case 1:
+                        _a.sent();
+                        preview_img = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index));
+                        scale = preview_img.width > preview_img.height ? preview_img.height / 100 : preview_img.width / 100;
+                        preview_img.width = preview_img.width / scale;
+                        preview_img.height = preview_img.height / scale;
+                        preview_img.anchorOffsetX = preview_img.width / 2;
+                        preview_img.anchorOffsetY = preview_img.height / 2;
+                        preview_img.x = this.stage.stageWidth / 2;
+                        preview_img.y = this.stage.stageHeight / 2;
+                        this.addChild(preview_img);
+                        circle = new egret.Shape();
+                        circle.graphics.beginFill(0xffffff, 1);
+                        circle.graphics.drawCircle(0, 0, 50);
+                        circle.graphics.endFill();
+                        circle.x = this.stage.stageWidth / 2;
+                        circle.y = this.stage.stageHeight / 2;
+                        preview_img.mask = circle;
+                        this.addChild(circle);
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
@@ -435,7 +466,7 @@ var Photo = (function (_super) {
         }
         //如果只放在小图片上加touch结束监听，则在空白地方无法触发
         this.container.touchEnabled = true;
-        //  this.exchangeMoveSubImg(0);
+        this.exchangeMoveSubImg(0);
     };
     Photo.prototype.mouseDown = function (evt) {
         this.target = evt.currentTarget;

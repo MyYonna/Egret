@@ -149,7 +149,7 @@ class Photo extends egret.Sprite {
         }
                  //如果只放在小图片上加touch结束监听，则在空白地方无法触发
                  this.container.touchEnabled = true;
-                //  this.exchangeMoveSubImg(0);
+                 this.exchangeMoveSubImg(0);
     }
     //鼠标按下,使目标图像处于最高深度，得到鼠标按下的位置与图像的起始位置的偏移
     private _touchStatus: boolean = false;

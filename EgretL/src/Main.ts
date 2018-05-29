@@ -37,6 +37,7 @@ class Main extends egret.DisplayObjectContainer {
         await platform.login();
         const userInfo = await platform.getUserInfo();
         console.log(userInfo);
+                this.preview()
 
     }
 
@@ -159,6 +160,29 @@ class Main extends egret.DisplayObjectContainer {
             this.current_station_character_index--;
             this.removeChildren();
             this.createGameScene();
+    }
+    private async preview(){
+        await RES.getResAsync(CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index);
+        var preview_img:egret.Bitmap = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index));
+        var scale = preview_img.width>preview_img.height?preview_img.height/100:preview_img.width/100;
+        preview_img.width = preview_img.width / scale;
+        preview_img.height = preview_img.height / scale;
+        preview_img.anchorOffsetX = preview_img.width/2;
+        preview_img.anchorOffsetY = preview_img.height/2;
+        preview_img.x = this.stage.stageWidth/2;
+        preview_img.y = this.stage.stageHeight/2;
+        this.addChild(preview_img);
+        var circle:egret.Shape = new egret.Shape();
+        circle.graphics.beginFill(0xffffff,1);
+        circle.graphics.drawCircle(0,0,50);
+        circle.graphics.endFill();
+
+        circle.x = this.stage.stageWidth/2;
+        circle.y = this.stage.stageHeight/2;
+        preview_img.mask = circle;
+
+        this.addChild(circle);
+
     }
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
