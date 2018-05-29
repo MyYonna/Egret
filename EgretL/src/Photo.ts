@@ -1,16 +1,18 @@
 class Photo extends egret.Sprite {
     private container: egret.Sprite;
     private pimg: egret.Bitmap;
-    public constructor(stage: egret.Sprite) {
+    private res:string;
+    public constructor(stage: egret.Sprite,res:string) {
         super();
         this.container = stage;
+        this.res = res;
         this.drawPhoto();
     }
     private main_rect:egret.Rectangle;
     private drawPhoto() {
         //加载图片
-        this.pimg = new egret.Bitmap(RES.getRes("JieGeng"));
-        var scale = (this.container.width - 40) / this.pimg.width;
+        this.pimg = new egret.Bitmap(RES.getRes(this.res));
+        var scale =   this.pimg.width >  this.pimg.height?(this.container.width - 40) / this.pimg.width:(this.container.height - 40) / this.pimg.height;
         //为整张图片适配预定义的相框，得到缩放比
         this.pimg.width = this.pimg.width * scale;
         this.pimg.height = this.pimg.height * scale;
@@ -28,7 +30,7 @@ class Photo extends egret.Sprite {
 
     private imageTouchListener(evt: egret.TouchEvent) {
         //将文件资源进行等分
-        var target = evt.currentTarget;
+        var target:egret.Bitmap = evt.currentTarget;
     
         let vertexSrc =
             "attribute vec2 aVertexPosition;\n" +
@@ -99,6 +101,7 @@ class Photo extends egret.Sprite {
                 if( target.parent )
                 {
                      that.container.removeChild(target);
+                    //  that.container.setChildIndex(target,-1);
                      that.divideImgRes(target);
                 }
             }
@@ -119,15 +122,16 @@ class Photo extends egret.Sprite {
         for (var i = 0; i < 4; i++) {
             for (var j = 0; j < 4; j++) {
                 //将最后的一张图片不显示
-                if (i == 3 && j == 3) {
-                    break;
-                }
+
                 var renderTexture: egret.RenderTexture = new egret.RenderTexture();
                 renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH));
                 var sub_img: egret.Bitmap = new egret.Bitmap(renderTexture);
                 sub_img.x = _distanceX + (i * (dImgW + 2));
                 sub_img.y = _distanceY + (j * (dImgH + 2));
-
+                if (i == 3 && j == 3) {
+                    this.sub_imgs.push(sub_img);
+                    break;
+                }
                 this.container.addChild(sub_img);
                 //为图片添加鼠标事件
                 sub_img.touchEnabled = true;
@@ -214,8 +218,6 @@ class Photo extends egret.Sprite {
                 //更新当前目标的包围盒的坐标与目标坐标匹配
                 this.sub_rects[targetIndex].x = this.sub_rects[targetIndex].x+moveDistance;
                 egret.Tween.get(target).to({ x:target.x + moveDistance}, 500); //建立一个坐标移动的动画
-                // egret.Tween.get(this.sub_rects[targetIndex]).to({ x:this.sub_rects[targetIndex].x + moveDistance}, 500); //建立一个坐标移动的动画
-                //target.x = target.x + moveDistance;//更新目标坐标
             } else {
                 targetRect = new egret.Rectangle(target.x, target.y+moveDistance, target.width, target.height);
                 for(var i=0;i<this.sub_imgs.length;i++){
@@ -230,17 +232,22 @@ class Photo extends egret.Sprite {
                 }
                 this.sub_rects[targetIndex].y = this.sub_rects[targetIndex].y+moveDistance;
                 egret.Tween.get(target).to({ y:target.y + moveDistance}, 500); 
-                // egret.Tween.get(this.sub_rects[targetIndex]).to({ y:this.sub_rects[targetIndex].y + moveDistance}, 500); 
-                //target.y = target.y + moveDistance;
-
             }
             if(this.ifFinishExchange(this.sub_rects,this.origin_sub_rects)){
-                console.log("拼图完成，进入下一阶段");
                 var that = this;
                 setTimeout(function(){
-                var completeEvent:CompleteEvent = new CompleteEvent(CompleteEvent.Result);
-                //发送要求事件
-                that.dispatchEvent(completeEvent);
+                    var completeEvent:CompleteEvent = new CompleteEvent(CompleteEvent.Result);
+                    //将图片的位置向左挪动，形成一张完整的大图。。。
+                    for(var i=0;i<that.sub_imgs.length;i++){
+                        var t = i/4;
+                        var j = i%4;
+                        if(!that.sub_imgs[i].parent){
+                            that.container.addChild(that.sub_imgs[i]);
+                        }
+                        egret.Tween.get(that.sub_imgs[i]).to({ y:that.sub_imgs[i].y-2*j,x:that.sub_imgs[i].x-2*t}, 500); 
+                    }
+                    //发送要求事件
+                    that.dispatchEvent(completeEvent);
                 },500)
 
             }
@@ -249,7 +256,10 @@ class Photo extends egret.Sprite {
         this._touchStatus = false;
     }
     private checkHit(targetRect: egret.Rectangle, sourceRect: egret.Rectangle): boolean {
-        return targetRect.intersects(sourceRect) || !this.main_rect.containsRect(targetRect);
+        if(targetRect!=null&&sourceRect!=null){
+            return targetRect.intersects(sourceRect) || !this.main_rect.containsRect(targetRect);
+        }
+        return false;
     }
     /**
      * 交换已存在的img及其包围盒，已达到打乱顺序的目的
