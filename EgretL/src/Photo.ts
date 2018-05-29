@@ -9,8 +9,9 @@ class Photo extends egret.Sprite {
         this.drawPhoto();
     }
     private main_rect:egret.Rectangle;
-    private drawPhoto() {
+    private async drawPhoto() {
         //加载图片
+        await RES.getResAsync(this.res);
         this.pimg = new egret.Bitmap(RES.getRes(this.res));
         var scale =   this.pimg.width >  this.pimg.height?(this.container.width - 40) / this.pimg.width:(this.container.height - 40) / this.pimg.height;
         //为整张图片适配预定义的相框，得到缩放比
@@ -95,7 +96,7 @@ class Photo extends egret.Sprite {
         target.filters = [customFilter1];
         this.addEventListener(egret.Event.ENTER_FRAME, () => {
             customFilter1.uniforms.time += 0.02;
-            if (customFilter1.uniforms.time > 1) {
+            if (customFilter1.uniforms.time > 0.5) {
                 // customFilter1.uniforms.time = 0.0;
                 //帧播放完成后则拆分图像
                 if( target.parent )

@@ -43,49 +43,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 var APP_BG_COLOR = 0x87A09D; //小程序的背景颜色
 var PF_BG_COLOR = 0xC7C7C7; //相框背景颜色
 var PF_BR_COLOR = 0x0C0C0C; //相框边框
 var PF_BR_WIDTH = 10;
 var APP_NEXT_STATION = "next_station";
 var APP_WAIT_STASTIC = "wait_stastic";
+var CURRENT_STATION_CHARACTER_PRE = "character_";
 var Main = (function (_super) {
     __extends(Main, _super);
     function Main() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super.call(this) || this;
+        /**
+         * 创建游戏场景
+         */
+        _this.current_station_character_index = 1;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
+        return _this;
     }
-    Main.prototype.createChildren = function () {
-        _super.prototype.createChildren.call(this);
+    Main.prototype.onAddToStage = function () {
         egret.lifecycle.addLifecycleListener(function (context) {
-            // custom lifecycle plugin
+            context.onUpdate = function () { };
         });
         egret.lifecycle.onPause = function () {
             egret.ticker.pause();
@@ -93,33 +71,24 @@ var Main = (function (_super) {
         egret.lifecycle.onResume = function () {
             egret.ticker.resume();
         };
-        //inject the custom material parser
-        //注入自定义的素材解析器
-        var assetAdapter = new AssetAdapter();
-        egret.registerImplementation("eui.IAssetAdapter", assetAdapter);
-        egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
         this.runGame().catch(function (e) {
             console.log(e);
         });
     };
     Main.prototype.runGame = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var result, userInfo;
+            var userInfo;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.loadResource()];
                     case 1:
                         _a.sent();
                         this.createGameScene();
-                        return [4 /*yield*/, RES.getResAsync("description_json")];
-                    case 2:
-                        result = _a.sent();
-                        this.startAnimation(result);
                         return [4 /*yield*/, platform.login()];
-                    case 3:
+                    case 2:
                         _a.sent();
                         return [4 /*yield*/, platform.getUserInfo()];
-                    case 4:
+                    case 3:
                         userInfo = _a.sent();
                         console.log(userInfo);
                         return [2 /*return*/];
@@ -127,47 +96,34 @@ var Main = (function (_super) {
             });
         });
     };
+    //加载资源文件和资源
     Main.prototype.loadResource = function () {
         return __awaiter(this, void 0, void 0, function () {
             var loadingView, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 5, , 6]);
+                        _a.trys.push([0, 4, , 5]);
                         loadingView = new LoadingUI();
                         this.stage.addChild(loadingView);
                         return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
                     case 1:
                         _a.sent();
-                        return [4 /*yield*/, RES.loadGroup("heros", 0, loadingView)];
+                        return [4 /*yield*/, RES.loadGroup("preload", 0, loadingView)];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, RES.loadGroup("icons", 0, loadingView)];
+                        return [4 /*yield*/, RES.loadGroup("icons", 1, loadingView)];
                     case 3:
                         _a.sent();
-                        return [4 /*yield*/, this.loadTheme()];
-                    case 4:
-                        _a.sent();
                         this.stage.removeChild(loadingView);
-                        return [3 /*break*/, 6];
-                    case 5:
+                        return [3 /*break*/, 5];
+                    case 4:
                         e_1 = _a.sent();
                         console.error(e_1);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/];
                 }
             });
-        });
-    };
-    Main.prototype.loadTheme = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            // load skin theme configuration file, you can manually modify the file. And replace the default skin.
-            //加载皮肤主题配置文件,可以手动修改这个文件。替换默认皮肤。
-            var theme = new eui.Theme("resource/default.thm.json", _this.stage);
-            theme.addEventListener(eui.UIEvent.COMPLETE, function () {
-                resolve();
-            }, _this);
         });
     };
     Main.prototype.createGameScene = function () {
@@ -179,58 +135,49 @@ var Main = (function (_super) {
         bg.graphics.drawRect(0, 0, stageWidth, stageHeight);
         bg.graphics.endFill();
         this.addChild(bg);
+        var that = this;
         var photoFrame = new PhotoFrame(bg);
-        var photo = new Photo(photoFrame);
-        //添加一个下一关的按钮，并注册监听
-        var next_station = this.createBitmapByName(APP_NEXT_STATION);
-        next_station.scaleX = 0.1;
-        next_station.scaleY = 0.1;
-        next_station.x = stageWidth - (next_station.width * next_station.scaleX + 50);
-        next_station.y = stageHeight - (next_station.height * next_station.scaleY + 50);
-        next_station.touchEnabled = true;
-        next_station.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
-            next_station.scaleX = 0.15;
-            next_station.scaleY = 0.15;
-            next_station.x = stageWidth - (next_station.width * next_station.scaleX + 50);
-            next_station.y = stageHeight - (next_station.height * next_station.scaleY + 50);
+        var photo = new Photo(photoFrame, CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index);
+        photo.addEventListener(CompleteEvent.Result, function () {
+            that.touchEnabled = true;
+            that.addEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
+            that.addEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
         }, this);
-        next_station.addEventListener(egret.TouchEvent.TOUCH_END, function () {
-            next_station.scaleX = 0.1;
-            next_station.scaleY = 0.1;
-            next_station.x = stageWidth - (next_station.width * next_station.scaleX + 50);
-            next_station.y = stageHeight - (next_station.height * next_station.scaleY + 50);
-        }, this);
-        this.addChild(next_station);
-        photo.addEventListener(CompleteEvent.Result, this.CompleteStation, this);
-        var button = new eui.Button();
-        button.width = 100;
-        button.height = 40;
-        button.label = "确定";
-        button.skinName = "ButtonSkin.exml";
-        this.addChild(button);
+        this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
+        this.removeEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
     };
-    //拼图完成后，接收事件，并进行处理
-    Main.prototype.CompleteStation = function (evt) {
-        var stageWidth = this.stage.stageWidth;
-        var stageHeight = this.stage.stageHeight;
-        var bg = new egret.Sprite();
-        bg.graphics.beginFill(APP_BG_COLOR, 0.3); //设置APP背景
-        bg.graphics.drawRect(0, 0, stageWidth, stageHeight);
-        bg.graphics.endFill();
-        this.addChild(bg);
-        var wait_stastic = this.createBitmapByName(APP_WAIT_STASTIC);
-        var ratio = (this.stage.width - 200) / wait_stastic.width;
-        wait_stastic.width = wait_stastic.width * ratio;
-        wait_stastic.height = wait_stastic.height * ratio;
-        wait_stastic.anchorOffsetX = wait_stastic.width / 2;
-        wait_stastic.anchorOffsetY = wait_stastic.height / 2;
-        wait_stastic.scaleX = 0.1;
-        wait_stastic.scaleY = 0.1;
-        wait_stastic.x = this.stage.width / 2;
-        wait_stastic.y = this.stage.height / 2;
-        egret.Tween.get(wait_stastic).to({ scaleX: 1, scaleY: 1 }, 500);
-        wait_stastic.touchEnabled = true;
-        this.addChild(wait_stastic);
+    //舞台的滑动执行内部方法
+    Main.prototype.begin = function (evt) {
+        this.startX = evt.localX;
+    };
+    Main.prototype.end = function (evt) {
+        var moveXZ = evt.localX > this.startX ? true : false;
+        if (evt.localX == this.startX || (moveXZ && this.current_station_character_index == 7) || (!moveXZ && this.current_station_character_index == 1)) {
+            return;
+        }
+        if (moveXZ) {
+            this.nextListener();
+        }
+        else {
+            this.preListener();
+        }
+    };
+    //重新开始
+    Main.prototype.redoListener = function () {
+        this.removeChildren();
+        this.createGameScene();
+    };
+    //下一个
+    Main.prototype.nextListener = function () {
+        this.current_station_character_index++;
+        this.removeChildren();
+        this.createGameScene();
+    };
+    //下一个
+    Main.prototype.preListener = function () {
+        this.current_station_character_index--;
+        this.removeChildren();
+        this.createGameScene();
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
@@ -242,33 +189,6 @@ var Main = (function (_super) {
         result.texture = texture;
         return result;
     };
-    /**
-     * 描述文件加载成功，开始播放动画
-     * Description file loading is successful, start to play the animation
-     */
-    Main.prototype.startAnimation = function (result) {
-        var _this = this;
-        var parser = new egret.HtmlTextParser();
-        var textflowArr = result.map(function (text) { return parser.parse(text); });
-        var textfield = this.textfield;
-        var count = -1;
-        var change = function () {
-            count++;
-            if (count >= textflowArr.length) {
-                count = 0;
-            }
-            var textFlow = textflowArr[count];
-            // 切换描述内容
-            // Switch to described content
-            textfield.textFlow = textFlow;
-            var tw = egret.Tween.get(textfield);
-            tw.to({ "alpha": 1 }, 200);
-            tw.wait(2000);
-            tw.to({ "alpha": 0 }, 200);
-            tw.call(change, _this);
-        };
-        change();
-    };
     return Main;
-}(eui.UILayer));
+}(egret.DisplayObjectContainer));
 __reflect(Main.prototype, "Main");
