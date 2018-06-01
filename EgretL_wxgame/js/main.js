@@ -133,9 +133,49 @@ var Main = (function (_super) {
         egret.lifecycle.onResume = function () {
             egret.ticker.resume();
         };
-        this.runGame().catch(function (e) {
-            console.log(e);
-        });
+        // this.runGame().catch(e => {
+        //     console.log(e);
+        // })
+        var openDataContext = wx.getOpenDataContext();
+        if (this.isdisplay) {
+            this.bitmap.parent && this.bitmap.parent.removeChild(this.bitmap);
+            this.rankingListMask.parent && this.rankingListMask.parent.removeChild(this.rankingListMask);
+            this.isdisplay = false;
+        }
+        else {
+            //处理遮罩，避免开放数据域事件影响主域。
+            this.rankingListMask = new egret.Shape();
+            this.rankingListMask.graphics.beginFill(0x000000, 1);
+            this.rankingListMask.graphics.drawRect(0, 0, this.stage.width, this.stage.height);
+            this.rankingListMask.graphics.endFill();
+            this.rankingListMask.alpha = 0.5;
+            this.rankingListMask.touchEnabled = true;
+            this.addChild(this.rankingListMask);
+            //     //简单实现，打开这关闭使用一个按钮。
+            // this.addChild(this.btnClose);
+            //主要示例代码开始
+            var bitmapdata_1 = new egret.BitmapData(window["sharedCanvas"]);
+            bitmapdata_1.$deleteSource = false;
+            var texture = new egret.Texture();
+            texture._setBitmapData(bitmapdata_1);
+            this.bitmap = new egret.Bitmap(texture);
+            this.bitmap.width = this.stage.stageWidth;
+            this.bitmap.height = this.stage.stageHeight;
+            this.addChild(this.bitmap);
+            egret.startTick(function (timeStarmp) {
+                egret.WebGLUtils.deleteWebGLTexture(bitmapdata_1.webGLTexture);
+                bitmapdata_1.webGLTexture = null;
+                return false;
+            }, this);
+            //主要示例代码结束            
+            this.isdisplay = true;
+            //发送消息
+            openDataContext.postMessage({
+                isDisplay: this.isdisplay,
+                text: 'hello',
+                year: (new Date()).getFullYear()
+            });
+        }
     };
     Main.prototype.runGame = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -157,7 +197,6 @@ var Main = (function (_super) {
                     case 4:
                         userInfo = _a.sent();
                         console.log(userInfo);
-                        this.preview();
                         return [2 /*return*/];
                 }
             });
@@ -237,15 +276,16 @@ var Main = (function (_super) {
         bg.graphics.endFill();
         this.addChild(bg);
         var that = this;
-        var photoFrame = new PhotoFrame(bg);
-        var photo = new Photo(photoFrame, CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index);
-        photo.addEventListener(CompleteEvent.Result, function () {
+        this.photoFrame = new PhotoFrame(bg);
+        this.photo = new Photo(this.photoFrame, CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index);
+        this.photo.addEventListener(CompleteEvent.Result, function () {
             that.touchEnabled = true;
             that.addEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
             that.addEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
         }, this);
         this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
         this.removeEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
+        this.preview();
     };
     //舞台的滑动执行内部方法
     Main.prototype.begin = function (evt) {
@@ -286,7 +326,7 @@ var Main = (function (_super) {
     };
     Main.prototype.preview = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var preview_img, scale, circle;
+            var preview_img, scale, circle, complete_img;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, RES.getResAsync(CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index)];
@@ -299,16 +339,41 @@ var Main = (function (_super) {
                         preview_img.anchorOffsetX = preview_img.width / 2;
                         preview_img.anchorOffsetY = preview_img.height / 2;
                         preview_img.x = this.stage.stageWidth / 2;
-                        preview_img.y = this.stage.stageHeight / 2;
+                        preview_img.y = this.stage.stageHeight - 100;
                         this.addChild(preview_img);
                         circle = new egret.Shape();
                         circle.graphics.beginFill(0xffffff, 1);
                         circle.graphics.drawCircle(0, 0, 50);
                         circle.graphics.endFill();
                         circle.x = this.stage.stageWidth / 2;
-                        circle.y = this.stage.stageHeight / 2;
+                        circle.y = this.stage.stageHeight - 100;
                         preview_img.mask = circle;
                         this.addChild(circle);
+                        preview_img.touchEnabled = true;
+                        preview_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+                            preview_img.scaleX = 1.1;
+                            preview_img.scaleY = 1.1;
+                            circle.scaleX = 1.1;
+                            circle.scaleY = 1.1;
+                            // await RES.getResAsync(this.res);
+                            complete_img = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index));
+                            var scale = complete_img.width > complete_img.height ? (this.photoFrame.width - 40) / complete_img.width : (this.photoFrame.height - 40) / complete_img.height;
+                            //为整张图片适配预定义的相框，得到缩放比
+                            complete_img.width = complete_img.width * scale;
+                            complete_img.height = complete_img.height * scale;
+                            complete_img.anchorOffsetX = complete_img.width / 2;
+                            complete_img.anchorOffsetY = complete_img.height / 2;
+                            complete_img.x = (this.photoFrame.width) / 2;
+                            complete_img.y = (this.photoFrame.height) / 2;
+                            this.photoFrame.addChild(complete_img);
+                        }, this);
+                        preview_img.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+                            preview_img.scaleX = 1;
+                            preview_img.scaleY = 1;
+                            circle.scaleX = 1;
+                            circle.scaleY = 1;
+                            this.photoFrame.removeChild(complete_img);
+                        }, this);
                         return [2 /*return*/];
                 }
             });
@@ -466,7 +531,7 @@ var Photo = (function (_super) {
         }
         //如果只放在小图片上加touch结束监听，则在空白地方无法触发
         this.container.touchEnabled = true;
-        this.exchangeMoveSubImg(0);
+        //  this.exchangeMoveSubImg(0);
     };
     Photo.prototype.mouseDown = function (evt) {
         this.target = evt.currentTarget;

@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "description_json,begin_scene,begin_game_png",
+			"keys": "description_json,begin_scene,begin_game_png,egret_icon_png,panel_bg_png,panel_shop_01_png",
 			"name": "preload"
 		}
 	],
@@ -60,6 +60,21 @@
 			"name": "begin_game_png",
 			"type": "image",
 			"url": "assets/begin_game.png"
+		},
+		{
+			"name": "egret_icon_png",
+			"type": "image",
+			"url": "assets/egret_icon.png"
+		},
+		{
+			"name": "panel_bg_png",
+			"type": "image",
+			"url": "assets/panel_bg.png"
+		},
+		{
+			"name": "panel_shop_01_png",
+			"type": "image",
+			"url": "assets/panel_shop_01.png"
 		}
 	]
 }

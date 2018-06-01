@@ -15,6 +15,9 @@ class Main extends egret.DisplayObjectContainer {
         super();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
     }
+    private bitmap:egret.Bitmap;
+    private isdisplay:boolean;
+    private rankingListMask:egret.Shape;
     private onAddToStage(): void {
         egret.lifecycle.addLifecycleListener((context) => {
              context.onUpdate = () => {}
@@ -25,10 +28,55 @@ class Main extends egret.DisplayObjectContainer {
         egret.lifecycle.onResume = () => {
             egret.ticker.resume();
         }
-        this.runGame().catch(e => {
-            console.log(e);
-        })
+            // this.runGame().catch(e => {
+            //     console.log(e);
+            // })
+        let openDataContext = wx.getOpenDataContext();
+
+        if (this.isdisplay) {
+            this.bitmap.parent && this.bitmap.parent.removeChild(this.bitmap);
+            this.rankingListMask.parent && this.rankingListMask.parent.removeChild(this.rankingListMask);
+            this.isdisplay = false;
+        } else {
+            //处理遮罩，避免开放数据域事件影响主域。
+            this.rankingListMask = new egret.Shape();
+            this.rankingListMask.graphics.beginFill(0x000000, 1);
+            this.rankingListMask.graphics.drawRect(0, 0, this.stage.width, this.stage.height);
+            this.rankingListMask.graphics.endFill();
+            this.rankingListMask.alpha = 0.5;
+            this.rankingListMask.touchEnabled = true;
+            this.addChild(this.rankingListMask);
+
+        //     //简单实现，打开这关闭使用一个按钮。
+            // this.addChild(this.btnClose);
+            //主要示例代码开始
+            const bitmapdata = new egret.BitmapData(window["sharedCanvas"]);
+            bitmapdata.$deleteSource = false;
+            const texture = new egret.Texture();
+            texture._setBitmapData(bitmapdata);
+            this.bitmap = new egret.Bitmap(texture);
+            this.bitmap.width = this.stage.stageWidth;
+            this.bitmap.height = this.stage.stageHeight;
+            this.addChild(this.bitmap);
+
+            egret.startTick((timeStarmp: number) => {
+                egret.WebGLUtils.deleteWebGLTexture(bitmapdata.webGLTexture);
+                bitmapdata.webGLTexture = null;
+                return false;
+            }, this);
+            //主要示例代码结束            
+            this.isdisplay = true;
+            //发送消息
+            openDataContext.postMessage({
+                isDisplay: this.isdisplay,
+                text: 'hello',
+                year: (new Date()).getFullYear()
+            });
+
+
+        }
     }
+        
 
     private async runGame() {
         await this.loadResource();
@@ -37,7 +85,7 @@ class Main extends egret.DisplayObjectContainer {
         await platform.login();
         const userInfo = await platform.getUserInfo();
         console.log(userInfo);
-                this.preview()
+       
 
     }
 
@@ -100,6 +148,8 @@ class Main extends egret.DisplayObjectContainer {
      */
     private current_station_character_index:number = 1;
     private startX:number;
+    private photoFrame:egret.Sprite;
+    private photo:egret.Sprite;
     private createGameScene() {
         //背景
         var stageWidth = this.stage.stageWidth;
@@ -111,17 +161,17 @@ class Main extends egret.DisplayObjectContainer {
         bg.graphics.endFill();
         this.addChild(bg);
         var that = this;
-        var photoFrame:egret.Sprite = new PhotoFrame(bg);
-        var photo:egret.Sprite = new Photo(photoFrame,CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index);
+        this.photoFrame = new PhotoFrame(bg);
+        this.photo = new Photo(this.photoFrame,CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index);
 
-        photo.addEventListener(CompleteEvent.Result,function(){
+        this.photo.addEventListener(CompleteEvent.Result,function(){
             that.touchEnabled = true;
             that.addEventListener(egret.TouchEvent.TOUCH_BEGIN,that.begin,that);
             that.addEventListener(egret.TouchEvent.TOUCH_END,that.end,that);
         },this);
         this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN,that.begin,that);
         this.removeEventListener(egret.TouchEvent.TOUCH_END,that.end,that);
-
+        this.preview()
     }
         //舞台的滑动执行内部方法
     private begin(evt:egret.TouchEvent){
@@ -170,7 +220,7 @@ class Main extends egret.DisplayObjectContainer {
         preview_img.anchorOffsetX = preview_img.width/2;
         preview_img.anchorOffsetY = preview_img.height/2;
         preview_img.x = this.stage.stageWidth/2;
-        preview_img.y = this.stage.stageHeight/2;
+        preview_img.y = this.stage.stageHeight-100;
         this.addChild(preview_img);
         var circle:egret.Shape = new egret.Shape();
         circle.graphics.beginFill(0xffffff,1);
@@ -178,10 +228,41 @@ class Main extends egret.DisplayObjectContainer {
         circle.graphics.endFill();
 
         circle.x = this.stage.stageWidth/2;
-        circle.y = this.stage.stageHeight/2;
+        circle.y = this.stage.stageHeight-100;
         preview_img.mask = circle;
 
         this.addChild(circle);
+
+        preview_img.touchEnabled = true;
+        var complete_img;
+        preview_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function(){
+            preview_img.scaleX = 1.1;
+            preview_img.scaleY = 1.1;
+            circle.scaleX = 1.1;
+            circle.scaleY = 1.1;
+
+        // await RES.getResAsync(this.res);
+        complete_img = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index));
+        var scale =   complete_img.width >  complete_img.height?(this.photoFrame.width - 40) / complete_img.width:(this.photoFrame.height - 40) / complete_img.height;
+        //为整张图片适配预定义的相框，得到缩放比
+        complete_img.width = complete_img.width * scale;
+        complete_img.height = complete_img.height * scale;
+        complete_img.anchorOffsetX = complete_img.width / 2;
+        complete_img.anchorOffsetY = complete_img.height / 2;
+
+        complete_img.x = (this.photoFrame.width) / 2;
+        complete_img.y = (this.photoFrame.height) / 2;
+        this.photoFrame.addChild(complete_img);
+
+        },this);
+        preview_img.addEventListener(egret.TouchEvent.TOUCH_END,function(){
+            preview_img.scaleX = 1;
+            preview_img.scaleY = 1;
+            circle.scaleX = 1;
+            circle.scaleY = 1;
+
+            this.photoFrame.removeChild(complete_img);
+        },this);
 
     }
     /**
