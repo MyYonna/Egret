@@ -4,6 +4,8 @@ class RankHead extends egret.DisplayObjectContainer{
     }
 
     public render(){
+        this.height = 60;
+        this.width = this.parent.width;
         let bg_shape: egret.Shape = new egret.Shape();
         bg_shape.graphics.beginFill(0x363636, 1);
         bg_shape.graphics.drawRoundRect(0, 0, this.width, this.height, 10);

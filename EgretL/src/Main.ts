@@ -37,13 +37,37 @@ class Main extends egret.DisplayObjectContainer {
  
     }
         
-
+    private openid:string;
     private async runGame() {
         await this.loadResource();
         await this.createBeginScene();
         //登录，获取用户信息
         const loginInfo =  await platform.login();
         const userInfo = await platform.getUserInfo();
+        
+        var request = new egret.HttpRequest();
+        request.responseType = egret.HttpResponseType.TEXT;
+        //设置为 POST 请求
+        var params = "?code="+loginInfo.code;
+        request.open("http://flow.go.gionee.com/wx/checkLogin.json"+params,egret.HttpMethod.GET);
+        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        request.send();
+        request.addEventListener(egret.Event.COMPLETE,function(event:egret.Event){
+            var request = <egret.HttpRequest>event.currentTarget;
+            let response = JSON.parse(request.response);
+            if(response.errcode){
+                this.openid = "";
+            }else{
+                this.openid = response.openid;
+            }
+
+        },this);
+        request.addEventListener(egret.IOErrorEvent.IO_ERROR,function(){
+             this.openid = "";
+        },this);
+        request.addEventListener(egret.ProgressEvent.PROGRESS,function(){
+             this.openid = "";
+        },this);
     }
 
     //加载资源文件和资源
@@ -106,7 +130,7 @@ class Main extends egret.DisplayObjectContainer {
         this.addChild(this.btnRank);
         this.btnRank.touchEnabled = true;
         this.btnRank.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
-            this.createScoreRank()
+            this.createScoreRank();
         },this);
 
 
@@ -121,6 +145,7 @@ class Main extends egret.DisplayObjectContainer {
     private photo:egret.Sprite;
     private createGameScene() {
         //背景
+        this.btnRank.touchEnabled = false;
         var stageWidth = this.stage.stageWidth;
         var stageHeight = this.stage.stageHeight;
         var bg:egret.Sprite = new egret.Sprite();
@@ -155,8 +180,10 @@ class Main extends egret.DisplayObjectContainer {
             this.bitmap.parent && this.bitmap.parent.removeChild(this.bitmap);
             this.rankingListMask.parent && this.rankingListMask.parent.removeChild(this.rankingListMask);
             this.btnClose.parent && this.btnClose.parent.removeChild(this.btnClose);
+            this.btnRank.touchEnabled = true;
             this.isdisplay = false;
         } else {
+            this.btnRank.touchEnabled = false;
             //处理遮罩，避免开放数据域事件影响主域。
             this.rankingListMask = new egret.Shape();
             this.rankingListMask.graphics.beginFill(0x686b72, 1);
@@ -186,7 +213,8 @@ class Main extends egret.DisplayObjectContainer {
             this.btnClose.touchEnabled = true;
             this.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
                 this.isdisplay = true;
-                this.createScoreRank()
+                this.createScoreRank();
+
             },this);
             egret.startTick((timeStarmp: number) => {
                 egret.WebGLUtils.deleteWebGLTexture(bitmapdata.webGLTexture);
@@ -197,7 +225,8 @@ class Main extends egret.DisplayObjectContainer {
             this.isdisplay = true;
             // //发送消息
             this.openDataContext.postMessage({
-                isDisplay: this.isdisplay
+                isDisplay: this.isdisplay,
+                openid:this.openid 
             });
 
         }
@@ -239,6 +268,7 @@ class Main extends egret.DisplayObjectContainer {
             this.removeChildren();
             this.createGameScene();
     }
+    //预览完整的图
     private async preview(){
         await RES.getResAsync(CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index);
         var preview_img:egret.Bitmap = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index));

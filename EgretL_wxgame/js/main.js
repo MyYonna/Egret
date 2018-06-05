@@ -145,7 +145,7 @@ var Main = (function (_super) {
     };
     Main.prototype.runGame = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var loginInfo, userInfo;
+            var loginInfo, userInfo, request, params;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.loadResource()];
@@ -160,6 +160,28 @@ var Main = (function (_super) {
                         return [4 /*yield*/, platform.getUserInfo()];
                     case 4:
                         userInfo = _a.sent();
+                        request = new egret.HttpRequest();
+                        request.responseType = egret.HttpResponseType.TEXT;
+                        params = "?code=" + loginInfo.code;
+                        request.open("http://flow.go.gionee.com/wx/checkLogin.json" + params, egret.HttpMethod.GET);
+                        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        request.send();
+                        request.addEventListener(egret.Event.COMPLETE, function (event) {
+                            var request = event.currentTarget;
+                            var response = JSON.parse(request.response);
+                            if (response.errcode) {
+                                this.openid = "";
+                            }
+                            else {
+                                this.openid = response.openid;
+                            }
+                        }, this);
+                        request.addEventListener(egret.IOErrorEvent.IO_ERROR, function () {
+                            this.openid = "";
+                        }, this);
+                        request.addEventListener(egret.ProgressEvent.PROGRESS, function () {
+                            this.openid = "";
+                        }, this);
                         return [2 /*return*/];
                 }
             });
@@ -192,11 +214,11 @@ var Main = (function (_super) {
             });
         });
     };
+    //创建开始场景
     Main.prototype.createBeginScene = function () {
         var stageWidth = this.stage.stageWidth;
         var stageHeight = this.stage.stageHeight;
         var begin_scene = new egret.Bitmap(RES.getRes(APP_BEGIN_SCENE));
-        var rect = new egret.Rectangle(30, 31, 40, 41);
         var shape = new egret.Sprite();
         shape.graphics.beginFill(0x000000, 0.8);
         shape.graphics.drawRoundRect(0, 0, 150, 60, 60, 60);
@@ -221,8 +243,7 @@ var Main = (function (_super) {
         shape.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
             shape.scaleX = 1.2;
             shape.scaleY = 1.2;
-            this.createScoreRank();
-            // this.createGameScene();
+            this.createGameScene();
         }, this);
         shape.addEventListener(egret.TouchEvent.TOUCH_END, function () {
             shape.scaleX = 1;
@@ -243,6 +264,7 @@ var Main = (function (_super) {
     };
     Main.prototype.createGameScene = function () {
         //背景
+        this.btnRank.touchEnabled = false;
         var stageWidth = this.stage.stageWidth;
         var stageHeight = this.stage.stageHeight;
         var bg = new egret.Sprite();
@@ -276,9 +298,11 @@ var Main = (function (_super) {
             this.bitmap.parent && this.bitmap.parent.removeChild(this.bitmap);
             this.rankingListMask.parent && this.rankingListMask.parent.removeChild(this.rankingListMask);
             this.btnClose.parent && this.btnClose.parent.removeChild(this.btnClose);
+            this.btnRank.touchEnabled = true;
             this.isdisplay = false;
         }
         else {
+            this.btnRank.touchEnabled = false;
             //处理遮罩，避免开放数据域事件影响主域。
             this.rankingListMask = new egret.Shape();
             this.rankingListMask.graphics.beginFill(0x686b72, 1);
@@ -319,8 +343,7 @@ var Main = (function (_super) {
             // //发送消息
             this.openDataContext.postMessage({
                 isDisplay: this.isdisplay,
-                text: 'hello',
-                year: (new Date()).getFullYear()
+                openid: this.openid
             });
         }
     };
@@ -361,6 +384,7 @@ var Main = (function (_super) {
         this.removeChildren();
         this.createGameScene();
     };
+    //预览完整的图
     Main.prototype.preview = function () {
         return __awaiter(this, void 0, void 0, function () {
             var preview_img, scale, circle, complete_img;

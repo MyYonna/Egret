@@ -12,15 +12,15 @@ var Main = (function (_super) {
     __extends(Main, _super);
     function Main() {
         var _this = _super.call(this) || this;
-        _this.scrollView = new egret.ScrollView();
         _this.gameData = []; //排行榜数据
         wx.onMessage(function (data) {
             var that = _this;
             if (data.isDisplay) {
+                _this.openid = data.openid;
                 wx.getFriendCloudStorage({
                     keyList: ["rank_score"],
                     success: function (res) {
-                        // this.gameData = [];//需要清空数据才行，暂时不做
+                        _this.gameData = []; //需要清空数据才行，暂时不做
                         res.data.forEach(function (friendInfo, index) {
                             var value = JSON.parse(friendInfo.KVDataList[0].value);
                             _this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.wxgame.score, value.cost_step));
@@ -59,72 +59,50 @@ var Main = (function (_super) {
     }
     Main.prototype.runGame = function () {
         var _this = this;
-        var title = new egret.TextField();
-        title.text = "好友排行榜";
-        title.size = 40;
-        title.width = this.stage.stageWidth;
-        title.y = 50;
-        title.textAlign = egret.HorizontalAlign.CENTER;
-        title.textColor = 0xffffff;
+        //排行榜标题
+        var title = new RankTitle();
         this.addChild(title);
-        var listContainer = new egret.DisplayObjectContainer();
-        //设置滚动视图的内容区域以及其定位和高宽
-        this.scrollView.setContent(listContainer);
-        this.scrollView.width = this.stage.stageWidth * 0.8;
-        this.scrollView.height = this.stage.stageHeight * 0.6;
-        this.scrollView.anchorOffsetX = this.scrollView.width / 2;
-        this.scrollView.anchorOffsetY = this.scrollView.height / 2;
-        this.scrollView.x = this.stage.stageWidth >> 1;
-        this.scrollView.y = (this.stage.stageHeight >> 1) - 50;
-        //为滚动视图添加背景色
-        var background = new egret.Shape();
-        // background.graphics.lineStyle(1,0x797b7e);;
-        background.graphics.beginFill(0x363636, 1);
-        background.graphics.drawRect(0, 0, this.scrollView.width, this.scrollView.height);
-        background.graphics.endFill();
-        //定位滚动视图背景色的位置
-        background.anchorOffsetX = background.width >> 1;
-        background.anchorOffsetY = background.height >> 1;
-        background.x = this.stage.stageWidth >> 1;
-        background.y = (this.stage.stageHeight >> 1) - 50;
-        this.addChild(background);
-        this.addChild(this.scrollView);
+        title.render();
+        //绘制排行榜
+        var rank = new Rank();
+        this.addChild(rank);
+        rank.render();
         //绘制排行榜的头部
         var item = new RankHead();
-        item.height = 60;
-        item.width = this.scrollView.width;
-        item.anchorOffsetX = item.width / 2;
-        item.x = this.scrollView.x;
-        ;
-        item.y = this.scrollView.y - this.scrollView.height / 2 - item.height + 5;
+        rank.setHeader(item);
         item.render();
-        this.addChild(item);
-        //绘制主内容区
+        //内容区域
+        var rankContent = new RankContent();
+        var listContainer = rankContent.listContainer;
+        rank.setContent(rankContent);
+        rankContent.render();
+        //填充内容区域的条目
         this.gameData.forEach(function (value, index) {
             var item = new RankItem(index, value, false);
             item.y = index * 100;
             item.height = 100;
-            item.width = _this.scrollView.width;
+            item.width = rank.width;
             item.render();
             listContainer.addChild(item);
-            if (index == 0) {
+            console.log(value.openid, _this.openid);
+            if (value.openid == _this.openid) {
                 //展示自己的排名
                 var self_item1 = new RankItem(index, value, true);
                 self_item1.height = 100;
-                self_item1.width = _this.scrollView.width;
+                self_item1.width = rank.width;
                 self_item1.anchorOffsetX = self_item1.width / 2;
                 self_item1.x = _this.stage.stageWidth / 2;
-                self_item1.y = _this.scrollView.y + _this.scrollView.height / 2 + 20;
-                self_item1.render();
+                self_item1.y = rank.y + rank.height / 2 + 20;
                 _this.addChild(self_item1);
+                self_item1.render();
             }
         }, this);
     };
+    //删除离屏的内容
     Main.prototype.cancelGame = function () {
         for (var i = 0, l = this.numChildren; i < l; i++) {
             this.removeChildAt(0);
         }
-        this.scrollView.removeContent();
     };
     return Main;
 }(egret.DisplayObjectContainer));
@@ -135,10 +113,24 @@ var Rank = (function (_super) {
         return _super.call(this) || this;
     }
     Rank.prototype.setHeader = function (header) {
-        this.header = header;
+        this.addChild(header);
     };
     Rank.prototype.setContent = function (content) {
-        this.content = content;
+        this.addChild(content);
+    };
+    Rank.prototype.render = function () {
+        this.width = this.stage.stageWidth * 0.8;
+        this.height = this.stage.stageHeight * 0.6;
+        this.anchorOffsetX = this.width >> 1;
+        this.anchorOffsetY = this.height >> 1;
+        this.x = this.stage.stageWidth >> 1;
+        this.y = (this.stage.stageHeight >> 1) - 50;
+        //为滚动视图添加背景色
+        this.background = new egret.Shape();
+        this.background.graphics.beginFill(0x363636, 1);
+        this.background.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
+        this.background.graphics.endFill();
+        this.addChild(this.background);
     };
     return Rank;
 }(egret.DisplayObjectContainer));
@@ -146,32 +138,18 @@ __reflect(Rank.prototype, "Rank");
 var RankContent = (function (_super) {
     __extends(RankContent, _super);
     function RankContent() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.listContainer = new egret.DisplayObjectContainer();
+        return _this;
     }
     RankContent.prototype.render = function () {
-        var listContainer = new egret.DisplayObjectContainer();
         //设置滚动视图的内容区域以及其定位和高宽
-        this.setContent(listContainer);
-        this.width = this.stage.stageWidth * 0.8;
-        this.height = this.stage.stageHeight * 0.6;
-        this.anchorOffsetX = this.width / 2;
-        this.anchorOffsetY = this.height / 2;
-        this.x = this.stage.stageWidth >> 1;
-        this.y = (this.stage.stageHeight >> 1) - 50;
-        //为滚动视图添加背景色
-        var background = new egret.Shape();
-        // background.graphics.lineStyle(1,0x797b7e);;
-        background.graphics.beginFill(0x363636, 1);
-        background.graphics.drawRect(0, 0, this.width, this.height);
-        background.graphics.endFill();
-        //定位滚动视图背景色的位置
-        background.anchorOffsetX = background.width >> 1;
-        background.anchorOffsetY = background.height >> 1;
-        background.x = this.stage.stageWidth >> 1;
-        background.y = (this.stage.stageHeight >> 1) - 50;
-        this.stage.addChild(background);
-        this.stage.addChild(this);
+        this.setContent(this.listContainer);
+        this.width = this.parent.width;
+        this.height = this.parent.height - 60;
+        this.y = this.parent.getChildAt(1).height;
     };
+    ;
     return RankContent;
 }(egret.ScrollView));
 __reflect(RankContent.prototype, "RankContent");
@@ -181,6 +159,8 @@ var RankHead = (function (_super) {
         return _super.call(this) || this;
     }
     RankHead.prototype.render = function () {
+        this.height = 60;
+        this.width = this.parent.width;
         var bg_shape = new egret.Shape();
         bg_shape.graphics.beginFill(0x363636, 1);
         bg_shape.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
@@ -281,4 +261,20 @@ var RankItem = (function (_super) {
     return RankItem;
 }(egret.DisplayObjectContainer));
 __reflect(RankItem.prototype, "RankItem");
+var RankTitle = (function (_super) {
+    __extends(RankTitle, _super);
+    function RankTitle() {
+        return _super.call(this) || this;
+    }
+    RankTitle.prototype.render = function () {
+        this.text = "好友排行榜";
+        this.size = 40;
+        this.width = this.stage.stageWidth;
+        this.y = 50;
+        this.textAlign = egret.HorizontalAlign.CENTER;
+        this.textColor = 0xffffff;
+    };
+    return RankTitle;
+}(egret.TextField));
+__reflect(RankTitle.prototype, "RankTitle");
 ;window.Main = Main;
