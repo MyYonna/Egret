@@ -155,6 +155,7 @@ class Photo extends egret.Sprite {
     private _touchStatus: boolean = false;
     private _distance: egret.Point = new egret.Point();
     private target: egret.Bitmap;
+    private steps:number = 0;
     private mouseDown(evt: egret.TouchEvent): void {
         this.target = evt.currentTarget;
         this.container.setChildIndex(this.target, this.container.numChildren - 1);
@@ -169,6 +170,7 @@ class Photo extends egret.Sprite {
     //鼠标弹起
     private mouseUp(evt: egret.TouchEvent): void {
         this.container.removeEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
+        this.steps++;
         var target = this.target;
         var moveY: number = evt.stageY;
         var moveX: number = evt.stageX;
@@ -237,7 +239,7 @@ class Photo extends egret.Sprite {
             if(this.ifFinishExchange(this.sub_rects,this.origin_sub_rects)){
                 var that = this;
                 setTimeout(function(){
-                    var completeEvent:CompleteEvent = new CompleteEvent(CompleteEvent.Result);
+                    var completeEvent:CompleteEvent = new CompleteEvent(CompleteEvent.Result,that.steps);
                     //将图片的位置向左挪动，形成一张完整的大图。。。
                     for(var i=0;i<that.sub_imgs.length;i++){
                         var t = i/4;

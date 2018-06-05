@@ -7,17 +7,20 @@ const APP_NEXT_STATION:string = "next_station";
 const APP_WAIT_STASTIC:string = "wait_stastic";
 const APP_BEGIN_SCENE:string = "begin_scene";
 const APP_BEGIN_GAME:string = "begin_game_png";
+const APP_RANK_BACK:string = "rank_back_png";
+const APP_RANK_VIEW:string = "rank_view_png";
 const CURRENT_STATION_CHARACTER_PRE:string = "character_";
 class Main extends egret.DisplayObjectContainer {
-
-
     public constructor(){
         super();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
     }
     private bitmap:egret.Bitmap;
+    private btnClose:egret.Bitmap;
+    private btnRank:egret.Bitmap;
     private isdisplay:boolean;
     private rankingListMask:egret.Shape;
+    private openDataContext = wx.getOpenDataContext();
     private onAddToStage(): void {
         egret.lifecycle.addLifecycleListener((context) => {
              context.onUpdate = () => {}
@@ -28,65 +31,19 @@ class Main extends egret.DisplayObjectContainer {
         egret.lifecycle.onResume = () => {
             egret.ticker.resume();
         }
-            // this.runGame().catch(e => {
-            //     console.log(e);
-            // })
-        let openDataContext = wx.getOpenDataContext();
-
-        if (this.isdisplay) {
-            this.bitmap.parent && this.bitmap.parent.removeChild(this.bitmap);
-            this.rankingListMask.parent && this.rankingListMask.parent.removeChild(this.rankingListMask);
-            this.isdisplay = false;
-        } else {
-            //处理遮罩，避免开放数据域事件影响主域。
-            this.rankingListMask = new egret.Shape();
-            this.rankingListMask.graphics.beginFill(0x000000, 1);
-            this.rankingListMask.graphics.drawRect(0, 0, this.stage.width, this.stage.height);
-            this.rankingListMask.graphics.endFill();
-            this.rankingListMask.alpha = 0.5;
-            this.rankingListMask.touchEnabled = true;
-            this.addChild(this.rankingListMask);
-
-        //     //简单实现，打开这关闭使用一个按钮。
-            // this.addChild(this.btnClose);
-            //主要示例代码开始
-            const bitmapdata = new egret.BitmapData(window["sharedCanvas"]);
-            bitmapdata.$deleteSource = false;
-            const texture = new egret.Texture();
-            texture._setBitmapData(bitmapdata);
-            this.bitmap = new egret.Bitmap(texture);
-            this.bitmap.width = this.stage.stageWidth;
-            this.bitmap.height = this.stage.stageHeight;
-            this.addChild(this.bitmap);
-
-            egret.startTick((timeStarmp: number) => {
-                egret.WebGLUtils.deleteWebGLTexture(bitmapdata.webGLTexture);
-                bitmapdata.webGLTexture = null;
-                return false;
-            }, this);
-            //主要示例代码结束            
-            this.isdisplay = true;
-            //发送消息
-            openDataContext.postMessage({
-                isDisplay: this.isdisplay,
-                text: 'hello',
-                year: (new Date()).getFullYear()
-            });
-
-
-        }
+        this.runGame().catch(e => {
+            console.log(e);
+        })
+ 
     }
         
 
     private async runGame() {
         await this.loadResource();
         await this.createBeginScene();
-        // this.createGameScene();
-        await platform.login();
+        //登录，获取用户信息
+        const loginInfo =  await platform.login();
         const userInfo = await platform.getUserInfo();
-        console.log(userInfo);
-       
-
     }
 
     //加载资源文件和资源
@@ -102,12 +59,11 @@ class Main extends egret.DisplayObjectContainer {
             console.error(e);
         }
     }
+    //创建开始场景
     private  createBeginScene(){
         var stageWidth = this.stage.stageWidth;
         var stageHeight = this.stage.stageHeight;
         var begin_scene = new egret.Bitmap(RES.getRes(APP_BEGIN_SCENE));
-        // var begin_game = new egret.Bitmap(RES.getRes(APP_BEGIN_GAME));
-        var rect:egret.Rectangle = new egret.Rectangle(30,31,40,41);
         var shape:egret.Sprite = new egret.Sprite();
         shape.graphics.beginFill(0x000000,0.8);
         shape.graphics.drawRoundRect(0,0,150,60,60,60);
@@ -134,19 +90,32 @@ class Main extends egret.DisplayObjectContainer {
         shape.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function(){
             shape.scaleX = 1.2;
             shape.scaleY = 1.2;
-
             this.createGameScene();
         },this)
-                shape.addEventListener(egret.TouchEvent.TOUCH_END,function(){
+        shape.addEventListener(egret.TouchEvent.TOUCH_END,function(){
             shape.scaleX = 1;
             shape.scaleY = 1
-        },this)
+        },this);
+        //排行榜查看按钮
+        this.btnRank = new egret.Bitmap(RES.getRes(APP_RANK_VIEW));
+        this.btnRank.height = 80;
+        this.btnRank.width = 80;
+        this.btnRank.x = this.stage.stageWidth * 0.1 - 10;
+        this.btnRank.y = this.stage.stageHeight * 0.9 - 30;
+        //简单实现，打开这关闭使用一个按钮。
+        this.addChild(this.btnRank);
+        this.btnRank.touchEnabled = true;
+        this.btnRank.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
+            this.createScoreRank()
+        },this);
+
 
     }
     /**
      * 创建游戏场景
      */
     private current_station_character_index:number = 1;
+    private max_station_character_index:number = 0;
     private startX:number;
     private photoFrame:egret.Sprite;
     private photo:egret.Sprite;
@@ -163,8 +132,14 @@ class Main extends egret.DisplayObjectContainer {
         var that = this;
         this.photoFrame = new PhotoFrame(bg);
         this.photo = new Photo(this.photoFrame,CURRENT_STATION_CHARACTER_PRE+this.current_station_character_index);
-
-        this.photo.addEventListener(CompleteEvent.Result,function(){
+        //监听一个图像拼接完成事件
+        this.photo.addEventListener(CompleteEvent.Result,function(e:CompleteEvent){
+            that.max_station_character_index++;
+            that.openDataContext.postMessage({
+                update_max_station:true,
+                max_station: that.max_station_character_index,
+                steps:e.steps
+            });
             that.touchEnabled = true;
             that.addEventListener(egret.TouchEvent.TOUCH_BEGIN,that.begin,that);
             that.addEventListener(egret.TouchEvent.TOUCH_END,that.end,that);
@@ -173,7 +148,61 @@ class Main extends egret.DisplayObjectContainer {
         this.removeEventListener(egret.TouchEvent.TOUCH_END,that.end,that);
         this.preview()
     }
-        //舞台的滑动执行内部方法
+    //创建排名
+    private createScoreRank(){
+        //开放数据
+        if (this.isdisplay) {
+            this.bitmap.parent && this.bitmap.parent.removeChild(this.bitmap);
+            this.rankingListMask.parent && this.rankingListMask.parent.removeChild(this.rankingListMask);
+            this.btnClose.parent && this.btnClose.parent.removeChild(this.btnClose);
+            this.isdisplay = false;
+        } else {
+            //处理遮罩，避免开放数据域事件影响主域。
+            this.rankingListMask = new egret.Shape();
+            this.rankingListMask.graphics.beginFill(0x686b72, 1);
+            this.rankingListMask.graphics.drawRect(0, 1, this.stage.width, this.stage.height);
+            this.rankingListMask.graphics.endFill();
+            // this.rankingListMask.alpha = 0.5;
+            this.rankingListMask.touchEnabled = true;
+            this.addChild(this.rankingListMask);
+
+            // 将离屏的canvas生成图片，贴到主屏
+            const bitmapdata = new egret.BitmapData(window["sharedCanvas"]);
+            bitmapdata.$deleteSource = false;
+            const texture = new egret.Texture();
+            texture._setBitmapData(bitmapdata);
+            this.bitmap = new egret.Bitmap(texture);
+            this.bitmap.width = this.stage.stageWidth;
+            this.bitmap.height = this.stage.stageHeight;
+            this.addChild(this.bitmap);
+            // 画一个返回的按钮
+            this.btnClose = new egret.Bitmap(RES.getRes(APP_RANK_BACK));
+            this.btnClose.height = 80;
+            this.btnClose.width = 80;
+            this.btnClose.x = this.stage.stageWidth * 0.1 - 10;
+            this.btnClose.y = this.stage.stageHeight * 0.9 - 30;
+            //简单实现，打开这关闭使用一个按钮。
+            this.addChild(this.btnClose);
+            this.btnClose.touchEnabled = true;
+            this.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
+                this.isdisplay = true;
+                this.createScoreRank()
+            },this);
+            egret.startTick((timeStarmp: number) => {
+                egret.WebGLUtils.deleteWebGLTexture(bitmapdata.webGLTexture);
+                bitmapdata.webGLTexture = null;
+                return false;
+            }, this);
+            //主要示例代码结束            
+            this.isdisplay = true;
+            // //发送消息
+            this.openDataContext.postMessage({
+                isDisplay: this.isdisplay
+            });
+
+        }
+    }
+    //舞台的滑动执行内部方法
     private begin(evt:egret.TouchEvent){
             this.startX = evt.localX;
     }
@@ -186,7 +215,6 @@ class Main extends egret.DisplayObjectContainer {
                 }
                 return;
             }
-            
             if(moveXZ){
                 this.preListener();   
             }else{

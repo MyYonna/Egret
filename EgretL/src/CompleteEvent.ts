@@ -1,9 +1,10 @@
 class CompleteEvent extends egret.Event
 {
-    public static Result:string = "恭喜，过关成功。。";
-
-    public constructor(type:string, bubbles:boolean=false, cancelable:boolean=false)
+    public static Result:string = "COMPLETE";
+    public steps:number;
+    public constructor(type:string,steps:number, bubbles:boolean=false, cancelable:boolean=false)
     {
         super(type,bubbles,cancelable);
+        this.steps = steps;
     }
 }
