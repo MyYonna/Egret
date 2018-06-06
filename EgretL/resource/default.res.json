@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "description_json,begin_scene,begin_game_png,egret_icon_png,panel_bg_png,panel_shop_01_png,rank_back_png,rank_view_png",
+			"keys": "description_json,begin_scene,begin_game_png,egret_icon_png,panel_bg_png,panel_shop_01_png,rank_back_png,rank_view_png,exit_out_png,page_home_png",
 			"name": "preload"
 		}
 	],
@@ -85,6 +85,16 @@
 			"name": "rank_view_png",
 			"type": "image",
 			"url": "assets/rank_view.png"
+		},
+		{
+			"name": "exit_out_png",
+			"type": "image",
+			"url": "assets/exit_out.png"
+		},
+		{
+			"name": "page_home_png",
+			"type": "image",
+			"url": "assets/page_home.png"
 		}
 	]
 }

@@ -156,6 +156,7 @@ class Photo extends egret.Sprite {
     private _distance: egret.Point = new egret.Point();
     private target: egret.Bitmap;
     private steps:number = 0;
+    private stepsField:egret.TextField;
     private mouseDown(evt: egret.TouchEvent): void {
         this.target = evt.currentTarget;
         this.container.setChildIndex(this.target, this.container.numChildren - 1);
@@ -168,6 +169,7 @@ class Photo extends egret.Sprite {
     private mouseMove(evt: egret.TouchEvent) {
     }
     //鼠标弹起
+    
     private mouseUp(evt: egret.TouchEvent): void {
         this.container.removeEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
         this.steps++;
@@ -236,6 +238,14 @@ class Photo extends egret.Sprite {
                 this.sub_rects[targetIndex].y = this.sub_rects[targetIndex].y+moveDistance;
                 egret.Tween.get(target).to({ y:target.y + moveDistance}, 500); 
             }
+             this.stepsField = new egret.TextField();
+             this.stepsField.text = this.steps+"";
+             this.stepsField.size = 30;
+             this.stepsField.textColor = 0x000000;
+             this.stepsField.x = 50;
+             this.stepsField.y = 100;
+             this.container.parent.addChild(this.stepsField);
+
             if(this.ifFinishExchange(this.sub_rects,this.origin_sub_rects)){
                 var that = this;
                 setTimeout(function(){

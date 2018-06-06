@@ -171,7 +171,29 @@ class Main extends egret.DisplayObjectContainer {
         },this);
         this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN,that.begin,that);
         this.removeEventListener(egret.TouchEvent.TOUCH_END,that.end,that);
-        this.preview()
+        this.preview();
+
+        let exitBtn = new egret.Bitmap(RES.getRes("exit_out_png"));
+        exitBtn.x = this.stage.stageWidth-30-exitBtn.width;
+        exitBtn.y = this.stage.stageHeight-30-exitBtn.height;
+        exitBtn.touchEnabled = true;
+        exitBtn.addEventListener(egret.TouchEvent.TOUCH_TAP,function(){
+             wx.exitMiniProgram({
+                 success:res=>{},
+                 fail:res=>{},
+                 complete:res=>{}
+             })
+        },this);
+        this.addChild(exitBtn);
+
+        let homeBtn = new egret.Bitmap(RES.getRes("page_home_png"));
+        homeBtn.x = 30;
+        homeBtn.y = this.stage.stageHeight-30-homeBtn.height;
+        homeBtn.touchEnabled = true;
+        homeBtn.addEventListener(egret.TouchEvent.TOUCH_TAP,function(){
+            this.createBeginScene() 
+        },this);
+        this.addChild(homeBtn);
     }
     //创建排名
     private createScoreRank(){

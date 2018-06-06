@@ -290,6 +290,26 @@ var Main = (function (_super) {
         this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
         this.removeEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
         this.preview();
+        var exitBtn = new egret.Bitmap(RES.getRes("exit_out_png"));
+        exitBtn.x = this.stage.stageWidth - 30 - exitBtn.width;
+        exitBtn.y = this.stage.stageHeight - 30 - exitBtn.height;
+        exitBtn.touchEnabled = true;
+        exitBtn.addEventListener(egret.TouchEvent.TOUCH_TAP, function () {
+            wx.exitMiniProgram({
+                success: function (res) { },
+                fail: function (res) { },
+                complete: function (res) { }
+            });
+        }, this);
+        this.addChild(exitBtn);
+        var homeBtn = new egret.Bitmap(RES.getRes("page_home_png"));
+        homeBtn.x = 30;
+        homeBtn.y = this.stage.stageHeight - 30 - homeBtn.height;
+        homeBtn.touchEnabled = true;
+        homeBtn.addEventListener(egret.TouchEvent.TOUCH_TAP, function () {
+            this.createBeginScene();
+        }, this);
+        this.addChild(homeBtn);
     };
     //创建排名
     Main.prototype.createScoreRank = function () {
@@ -681,6 +701,13 @@ var Photo = (function (_super) {
                 this.sub_rects[targetIndex].y = this.sub_rects[targetIndex].y + moveDistance;
                 egret.Tween.get(target).to({ y: target.y + moveDistance }, 500);
             }
+            this.stepsField = new egret.TextField();
+            this.stepsField.text = this.steps + "";
+            this.stepsField.size = 30;
+            this.stepsField.textColor = 0x000000;
+            this.stepsField.x = 50;
+            this.stepsField.y = 100;
+            this.container.parent.addChild(this.stepsField);
             if (this.ifFinishExchange(this.sub_rects, this.origin_sub_rects)) {
                 var that = this;
                 setTimeout(function () {
