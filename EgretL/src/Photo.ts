@@ -1,32 +1,46 @@
-class Photo extends egret.Sprite {
-    private container: egret.Sprite;
+class Photo extends egret.DisplayObjectContainer {
     private pimg: egret.Bitmap;
     private res:string;
-    public constructor(stage: egret.Sprite,res:string) {
+    public constructor(res:string) {
         super();
-        this.container = stage;
         this.res = res;
-        this.drawPhoto();
     }
     private main_rect:egret.Rectangle;
-    private async drawPhoto() {
+    public async render() {
         //加载图片
         await RES.getResAsync(this.res);
         this.pimg = new egret.Bitmap(RES.getRes(this.res));
-        var scale =   this.pimg.width >  this.pimg.height?(this.container.width - 40) / this.pimg.width:(this.container.height - 40) / this.pimg.height;
+        var scale =   this.pimg.width >  this.pimg.height?(this.parent.width-40) / this.pimg.width:(this.parent.height-40 )/ this.pimg.height;
         //为整张图片适配预定义的相框，得到缩放比
         this.pimg.width = this.pimg.width * scale;
         this.pimg.height = this.pimg.height * scale;
-        this.pimg.anchorOffsetX = this.pimg.width / 2;
-        this.pimg.anchorOffsetY = this.pimg.height / 2;
-
-        this.pimg.x = (this.container.width) / 2;
-        this.pimg.y = (this.container.height) / 2;
-        this.container.addChild(this.pimg);
-        // jieGeng.scale9Grid = new egret.Rectangle( 20,20,jieGengW,jieGengH );
+        //设置本容器的属性
+        this.width = this.pimg.width;
+        this.height = this.pimg.height;
+        //重新设置锚点
+        this.anchorOffsetX = this.width/2;
+        this.anchorOffsetY = this.height/2;
+        this.x = this.parent.width/2;
+        this.y = this.parent.height/2;
+        //为本容器加入背景组件
+        let photoBg = new egret.Shape();
+        photoBg.graphics.beginFill( 0xffffff, 1);//设置相框背景
+        photoBg.graphics.lineStyle(1,PF_BR_COLOR);//设置相框的边框
+        photoBg.graphics.drawRect( 0,0,this.width,this.height);
+        photoBg.graphics.endFill();
+        this.addChild(photoBg);
+        this.addChild(this.pimg);
         //为图片加上touch事件
         this.pimg.touchEnabled = true;
         this.pimg.addEventListener(egret.TouchEvent.TOUCH_TAP, this.imageTouchListener, this);
+        //步数显示
+        this.stepsField = new egret.TextField();
+        this.stepsField.text = this.steps+"";
+        this.stepsField.size = 50;
+        this.stepsField.textColor = 0x000000;
+        this.stepsField.x = 50;
+        this.stepsField.y = 100;
+        this.parent.parent.addChild(this.stepsField);
     }
 
     private imageTouchListener(evt: egret.TouchEvent) {
@@ -101,9 +115,8 @@ class Photo extends egret.Sprite {
                 //帧播放完成后则拆分图像
                 if( target.parent )
                 {
-                     that.container.removeChild(target);
-                    //  that.container.setChildIndex(target,-1);
-                     that.divideImgRes(target);
+                     target.parent.removeChild(target);
+                     this.divideImgRes(target);
                 }
             }
         }, this);
@@ -115,40 +128,42 @@ class Photo extends egret.Sprite {
     private origin_sub_rects:egret.Rectangle[] = [];
     private sub_rects: egret.Rectangle[] = [];
     private divideImgRes(img: egret.Bitmap) {
+        this.resetPhoto(true);
         var dImgW = img.width / 4;
         var dImgH = img.height / 4;
-        var _distanceX = (this.container.width - img.width) / 2;
-        var _distanceY = (this.container.height - img.height) / 2;
-        this.main_rect = new egret.Rectangle( _distanceX,  _distanceY,  this.pimg.width+2*4,  this.pimg.height+2*4);
+        this.main_rect = new egret.Rectangle( 0,  0,  this.width,  this.height);//对移动的外围进行限定
+        let random_i = Math.floor(Math.random()*4);
+        let random_j = Math.floor(Math.random()*4);
         for (var i = 0; i < 4; i++) {
             for (var j = 0; j < 4; j++) {
                 //将最后的一张图片不显示
-
                 var renderTexture: egret.RenderTexture = new egret.RenderTexture();
                 renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH));
                 var sub_img: egret.Bitmap = new egret.Bitmap(renderTexture);
-                sub_img.x = _distanceX + (i * (dImgW + 2));
-                sub_img.y = _distanceY + (j * (dImgH + 2));
-                if (i == 3 && j == 3) {
-                    this.sub_imgs.push(sub_img);
-                    break;
-                }
-                this.container.addChild(sub_img);
-                //为图片添加鼠标事件
-                sub_img.touchEnabled = true;
-                sub_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
-                sub_img.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
-                sub_img.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.mouseMove, this);
+                sub_img.x =  i * (dImgW + 2);
+                sub_img.y =  j * (dImgH + 2);
                 //将图片的包围盒保存起来，用于后期做碰撞检测
+
+                if (i == random_i && j == random_j) {
+                    this.sub_rects.push(null);
+                    this.sub_imgs.push(sub_img);
+                    this.origin_sub_rects.push(null);
+                    continue;
+                }
+                this.addChild(sub_img);
                 var sub_rect = new egret.Rectangle(sub_img.x, sub_img.y, sub_img.width, sub_img.height);
                 var origin_sub_rect = new egret.Rectangle(sub_img.x, sub_img.y, sub_img.width, sub_img.height);
                 this.sub_rects.push(sub_rect);
                 this.sub_imgs.push(sub_img);
                 this.origin_sub_rects.push(origin_sub_rect);
+                //为图片添加鼠标事件
+                sub_img.touchEnabled = true;
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
             }
         }
                  //如果只放在小图片上加touch结束监听，则在空白地方无法触发
-                 this.container.touchEnabled = true;
+                 this.touchEnabled = true;
                 //  this.exchangeMoveSubImg(0);
     }
     //鼠标按下,使目标图像处于最高深度，得到鼠标按下的位置与图像的起始位置的偏移
@@ -159,20 +174,15 @@ class Photo extends egret.Sprite {
     private stepsField:egret.TextField;
     private mouseDown(evt: egret.TouchEvent): void {
         this.target = evt.currentTarget;
-        this.container.setChildIndex(this.target, this.container.numChildren - 1);
         this._touchStatus = true;
-        this._distance.x = evt.stageX - this.target.x;
-        this._distance.y = evt.stageY - this.target.y;
-        this.container.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
-    }
-    //移动鼠标
-    private mouseMove(evt: egret.TouchEvent) {
+        this._distance.x = evt.stageX-this.x - this.target.x;
+        this._distance.y = evt.stageY-this.y - this.target.y;
+        this.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
     }
     //鼠标弹起
     
     private mouseUp(evt: egret.TouchEvent): void {
-        this.container.removeEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
-        this.steps++;
+        this.removeEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
         var target = this.target;
         var moveY: number = evt.stageY;
         var moveX: number = evt.stageX;
@@ -180,9 +190,9 @@ class Photo extends egret.Sprite {
         var moveDistance = 0;
         //需要判断是哪个轴的移动
         if (this._touchStatus) {
-            if (Math.abs(moveY - (this._distance.y + target.y)) > Math.abs(moveX - (this._distance.x + target.x))) {
+            if (Math.abs(moveY - (this._distance.y + target.y+this.y)) > Math.abs(moveX - (this._distance.x + target.x+this.x))) {
                 ifX = false;
-                if ((moveY - (this._distance.y + target.y)) > 0) {
+                if ((moveY - (this._distance.y + target.y+this.y)) > 0) {
                     //说明是往Y正方向移动
                     moveDistance = this.pimg.height / 4 + 2;
                 } else {
@@ -190,8 +200,8 @@ class Photo extends egret.Sprite {
                       moveDistance = - (this.pimg.height / 4 + 2);
                    
                 }
-            } else if (Math.abs(moveY - (this._distance.y + target.y)) < Math.abs(moveX - (this._distance.x + target.x))) {
-                if ((moveX - (this._distance.x + target.x)) > 0) {
+            } else if (Math.abs(moveY - (this._distance.y + target.y+this.y)) < Math.abs(moveX - (this._distance.x + target.x+this.x))) {
+                if ((moveX - (this._distance.x + target.x+this.x)) > 0) {
                     //说明是往X正方向移动
                      moveDistance = this.pimg.width / 4 + 2
                 } else {
@@ -207,6 +217,7 @@ class Photo extends egret.Sprite {
             var sourceRect:egret.Rectangle;
             var targetRect:egret.Rectangle;
             var targetIndex:number;
+            this.steps++;
             if (ifX) {
                 targetRect = new egret.Rectangle(target.x + moveDistance, target.y, target.width, target.height);
                 for(var i=0;i<this.sub_imgs.length;i++){
@@ -214,6 +225,7 @@ class Photo extends egret.Sprite {
                         sourceRect = this.sub_rects[i];
                             if (this.checkHit(targetRect, sourceRect)) {
                                 //如果存在碰撞则返回，不执行下面的状态更新代码
+                                this.steps--;
                                 return;
                             }
                     }else{
@@ -225,10 +237,12 @@ class Photo extends egret.Sprite {
                 egret.Tween.get(target).to({ x:target.x + moveDistance}, 500); //建立一个坐标移动的动画
             } else {
                 targetRect = new egret.Rectangle(target.x, target.y+moveDistance, target.width, target.height);
+                
                 for(var i=0;i<this.sub_imgs.length;i++){
                     if(this.sub_imgs[i]!= target){
                         sourceRect = this.sub_rects[i];
                         if (this.checkHit(targetRect, sourceRect)) {
+                            this.steps--;
                             return;
                         }
                     }else{
@@ -238,24 +252,20 @@ class Photo extends egret.Sprite {
                 this.sub_rects[targetIndex].y = this.sub_rects[targetIndex].y+moveDistance;
                 egret.Tween.get(target).to({ y:target.y + moveDistance}, 500); 
             }
-             this.stepsField = new egret.TextField();
-             this.stepsField.text = this.steps+"";
-             this.stepsField.size = 30;
-             this.stepsField.textColor = 0x000000;
-             this.stepsField.x = 50;
-             this.stepsField.y = 100;
-             this.container.parent.addChild(this.stepsField);
+            this.stepsField.text = this.steps+"";//步数加1
 
             if(this.ifFinishExchange(this.sub_rects,this.origin_sub_rects)){
                 var that = this;
                 setTimeout(function(){
+                    that.resetPhoto(false);
                     var completeEvent:CompleteEvent = new CompleteEvent(CompleteEvent.Result,that.steps);
                     //将图片的位置向左挪动，形成一张完整的大图。。。
-                    for(var i=0;i<that.sub_imgs.length;i++){
-                        var t = i/4;
+                    for(let i=0;i<that.sub_imgs.length;i++){
+                        var t = Math.floor(i/4);
                         var j = i%4;
+                        that.sub_imgs[i].touchEnabled = false;;
                         if(!that.sub_imgs[i].parent){
-                            that.container.addChild(that.sub_imgs[i]);
+                            that.addChild(that.sub_imgs[i]);
                         }
                         egret.Tween.get(that.sub_imgs[i]).to({ y:that.sub_imgs[i].y-2*j,x:that.sub_imgs[i].x-2*t}, 500); 
                     }
@@ -268,11 +278,32 @@ class Photo extends egret.Sprite {
        
         this._touchStatus = false;
     }
+    //碰撞检测
     private checkHit(targetRect: egret.Rectangle, sourceRect: egret.Rectangle): boolean {
         if(targetRect!=null&&sourceRect!=null){
             return targetRect.intersects(sourceRect) || !this.main_rect.containsRect(targetRect);
         }
         return false;
+    }
+    //重置容器属性
+    private resetPhoto(flag:boolean){
+        //重新设置本容器的属性
+        this.width = flag?this.pimg.width+2*3:this.pimg.width;
+        this.height =  flag?this.pimg.height+2*3:this.pimg.height;
+        //重新重新设置锚点
+        this.anchorOffsetX = this.width/2;
+        this.anchorOffsetY = this.height/2;
+        this.x = this.parent.width/2;
+        this.y = this.parent.height/2;
+        //重新设置相片边界
+        this.removeChildAt(0);
+        let photoBg = new egret.Shape();
+        photoBg.graphics.beginFill( 0xffffff, 1);//设置相框背景
+        photoBg.graphics.lineStyle(1,PF_BR_COLOR);//设置相框的边框
+        photoBg.graphics.drawRect( 0,0,this.width,this.height);
+        photoBg.graphics.endFill();
+        this.addChild(photoBg);
+        this.setChildIndex(photoBg,0);
     }
     /**
      * 交换已存在的img及其包围盒，已达到打乱顺序的目的
@@ -282,9 +313,9 @@ class Photo extends egret.Sprite {
             var bridgeX:number,bridgeY:number;
             bridgeX = this.sub_imgs[i].x;
             bridgeY = this.sub_imgs[i].y;
-            this.container.setChildIndex(this.sub_imgs[i],this.container.numChildren);
+            this.parent.setChildIndex(this.sub_imgs[i],this.parent.numChildren);
             egret.Tween.get(this.sub_imgs[i]).to({ x:this.sub_imgs[targetIndex].x,y:this.sub_imgs[targetIndex].y}, 500);
-            this.container.setChildIndex(this.sub_imgs[targetIndex],this.container.numChildren);
+            this.parent.setChildIndex(this.sub_imgs[targetIndex],this.parent.numChildren);
             egret.Tween.get(this.sub_imgs[targetIndex]).to({ x:bridgeX,y:bridgeY}, 500);
 
             this.sub_rects[i].x = this.sub_rects[targetIndex].x;
@@ -304,8 +335,10 @@ class Photo extends egret.Sprite {
      */
     private ifFinishExchange(sub_rects:egret.Rectangle[],origin_sub_rects:egret.Rectangle[]):boolean{
         for(var i=0;i<sub_rects.length;i++){
-            if(sub_rects[i].x != origin_sub_rects[i].x || sub_rects[i].y != origin_sub_rects[i].y){
-                return false;
+            if(sub_rects[i] != null && origin_sub_rects[i] != null){
+                if(sub_rects[i].x != origin_sub_rects[i].x || sub_rects[i].y != origin_sub_rects[i].y){
+                    return false;
+                }
             }
         }
         return true;

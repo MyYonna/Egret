@@ -10,30 +10,30 @@ r.prototype = e.prototype, t.prototype = new r();
 };
 var PhotoFrame = (function (_super) {
     __extends(PhotoFrame, _super);
-    function PhotoFrame(stage) {
-        var _this = _super.call(this) || this;
-        _this.container = stage;
-        _this.drawPhotoFrame();
-        return _this;
+    function PhotoFrame() {
+        return _super.call(this) || this;
     }
-    PhotoFrame.prototype.drawPhotoFrame = function () {
-        var stageWidth = this.container.width;
-        var stageHeight = this.container.height;
+    PhotoFrame.prototype.render = function () {
+        //设置本容器的属性
+        var stageWidth = this.stage.stageWidth;
+        var stageHeight = this.stage.stageHeight;
         var photoFrameW = stageWidth - 100;
         var photoFrameH = photoFrameW;
-        this.graphics.beginFill(PF_BG_COLOR, 1); //设置相框背景
+        this.width = photoFrameW;
+        this.height = photoFrameH;
         //重新设置锚点
         this.anchorOffsetX = photoFrameW / 2;
         this.anchorOffsetY = photoFrameH / 2;
-        this.graphics.lineStyle(PF_BR_WIDTH, PF_BR_COLOR); //设置相框的边框
-        this.graphics.drawRect(0, 0, photoFrameW, photoFrameH);
-        this.graphics.endFill();
-        this.width = photoFrameW;
-        this.height = photoFrameH;
         this.x = stageWidth / 2;
         this.y = stageHeight / 2;
-        this.container.addChild(this);
+        //为本容器加入背景组件
+        var photoFrameBg = new egret.Shape();
+        photoFrameBg.graphics.beginFill(PF_BG_COLOR, 1); //设置相框背景
+        photoFrameBg.graphics.lineStyle(PF_BR_WIDTH, PF_BR_COLOR); //设置相框的边框
+        photoFrameBg.graphics.drawRect(0, 0, photoFrameW, photoFrameH);
+        photoFrameBg.graphics.endFill();
+        this.addChild(photoFrameBg);
     };
     return PhotoFrame;
-}(egret.Sprite));
+}(egret.DisplayObjectContainer));
 __reflect(PhotoFrame.prototype, "PhotoFrame");

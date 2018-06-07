@@ -8,11 +8,20 @@
 		"libs/modules/promise/promise.js"
 	],
 	"game": [
+		"bin-debug/Photo.js",
 		"bin-debug/CompleteEvent.js",
+		"bin-debug/GameMain.js",
+		"bin-debug/HomeBtn.js",
+		"bin-debug/ImagePreview.js",
 		"bin-debug/LoadingUI.js",
 		"bin-debug/Main.js",
-		"bin-debug/Photo.js",
+		"bin-debug/ExitBtn.js",
 		"bin-debug/PhotoFrame.js",
-		"bin-debug/Platform.js"
+		"bin-debug/Platform.js",
+		"bin-debug/RankBtn.js",
+		"bin-debug/RankUI.js",
+		"bin-debug/RefreshBtn.js",
+		"bin-debug/StartBtn.js",
+		"bin-debug/StartingMain.js"
 	]
 }

@@ -10,12 +10,14 @@ r.prototype = e.prototype, t.prototype = new r();
 };
 var CompleteEvent = (function (_super) {
     __extends(CompleteEvent, _super);
-    function CompleteEvent(type, bubbles, cancelable) {
+    function CompleteEvent(type, steps, bubbles, cancelable) {
         if (bubbles === void 0) { bubbles = false; }
         if (cancelable === void 0) { cancelable = false; }
-        return _super.call(this, type, bubbles, cancelable) || this;
+        var _this = _super.call(this, type, bubbles, cancelable) || this;
+        _this.steps = steps;
+        return _this;
     }
-    CompleteEvent.Result = "恭喜，过关成功。。";
+    CompleteEvent.Result = "COMPLETE";
     return CompleteEvent;
 }(egret.Event));
 __reflect(CompleteEvent.prototype, "CompleteEvent");

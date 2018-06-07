@@ -3,13 +3,11 @@ class RankInfo{
     public avatarUrl:string;
     public score:number;
     public openid:string;
-    public steps:number;
 
-    public constructor(nickname,avatarUrl,openid,score,steps){
+    public constructor(nickname,avatarUrl,openid,score){
         this.nickname = nickname;
         this.avatarUrl = avatarUrl;
         this.openid = openid;
         this.score = score;
-        this.steps = steps;
     }
 }

@@ -54,7 +54,7 @@ class RankItem extends egret.DisplayObjectContainer {
         nicktxt.height = 100;
         nicktxt.verticalAlign = egret.VerticalAlign.MIDDLE;
         nicktxt.text = this.value.nickname;
-        nicktxt.size = 26;
+        nicktxt.size = 20;
         this.addChild(nicktxt);
         //分数
         let numtxt = new egret.TextField();

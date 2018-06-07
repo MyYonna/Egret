@@ -6,6 +6,12 @@
 		"libs/modules/promise/promise.js"
 	],
 	"game": [
-		"bin-debug/Main.js"
+		"bin-debug/Main.js",
+		"bin-debug/Rank.js",
+		"bin-debug/RankContent.js",
+		"bin-debug/RankHead.js",
+		"bin-debug/RankInfo.js",
+		"bin-debug/RankItem.js",
+		"bin-debug/RankTitle.js"
 	]
 }

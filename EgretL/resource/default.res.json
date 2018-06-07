@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "description_json,begin_scene,begin_game_png,egret_icon_png,panel_bg_png,panel_shop_01_png,rank_back_png,rank_view_png,exit_out_png,page_home_png",
+			"keys": "begin_scene,rank_back_png,rank_view_png,exit_out_png,page_home_png,start_game_png,refresh_view_png",
 			"name": "preload"
 		}
 	],
@@ -47,34 +47,9 @@
 			"name": "character_8"
 		},
 		{
-			"url": "config/description.json",
-			"type": "json",
-			"name": "description_json"
-		},
-		{
 			"name": "begin_scene",
 			"type": "image",
 			"url": "assets/begin_scene.jpg"
-		},
-		{
-			"name": "begin_game_png",
-			"type": "image",
-			"url": "assets/begin_game.png"
-		},
-		{
-			"name": "egret_icon_png",
-			"type": "image",
-			"url": "assets/egret_icon.png"
-		},
-		{
-			"name": "panel_bg_png",
-			"type": "image",
-			"url": "assets/panel_bg.png"
-		},
-		{
-			"name": "panel_shop_01_png",
-			"type": "image",
-			"url": "assets/panel_shop_01.png"
 		},
 		{
 			"name": "rank_back_png",
@@ -95,6 +70,21 @@
 			"name": "page_home_png",
 			"type": "image",
 			"url": "assets/page_home.png"
+		},
+		{
+			"name": "start_game_png",
+			"type": "image",
+			"url": "assets/start_game.png"
+		},
+		{
+			"name": "begin_title_png",
+			"type": "image",
+			"url": "assets/begin_title.png"
+		},
+		{
+			"name": "refresh_view_png",
+			"type": "image",
+			"url": "assets/refresh_view.png"
 		}
 	]
 }

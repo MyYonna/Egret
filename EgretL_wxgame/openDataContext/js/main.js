@@ -18,17 +18,19 @@ var Main = (function (_super) {
             if (data.isDisplay) {
                 _this.openid = data.openid;
                 wx.getFriendCloudStorage({
-                    keyList: ["rank_score"],
+                    keyList: ["rank_socre"],
                     success: function (res) {
+                        console.log(res.data);
                         _this.gameData = []; //需要清空数据才行，暂时不做
                         res.data.forEach(function (friendInfo, index) {
-                            var value = JSON.parse(friendInfo.KVDataList[0].value);
-                            _this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.wxgame.score, value.cost_step));
+                            friendInfo.KVDataList.forEach(function (item, index) {
+                                var value = JSON.parse(item.value);
+                                _this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.cost_step));
+                            });
                         });
                         _this.runGame();
                     },
                     fail: function (err) {
-                        console.log(err);
                     },
                     complete: function () {
                     }
@@ -38,23 +40,47 @@ var Main = (function (_super) {
             else {
                 _this.cancelGame();
             }
-            if (data.update_max_station) {
-                var score = {
-                    "wxgame": {
-                        "score": data.max_station,
-                        "update_time": new Date().toString
-                    },
-                    "cost_step": data.steps
+            if (data.update_step) {
+                var station = {
+                    "cost_step": data.cost_step
                 };
-                wx.setUserCloudStorage({
-                    KVDataList: [{ key: "rank_score", value: JSON.stringify(score) }], success: function (res) {
+                console.log(JSON.stringify(station) + 0);
+                wx.getUserCloudStorage({ keyList: ["rank_socre"], success: function (res) {
                         console.log(res);
-                    }, fail: function (err) {
-                    }, complete: function () {
-                    }
-                });
+                        console.log(res.KVDataList);
+                        var kvDataList = res.KVDataList;
+                        if (kvDataList == null) {
+                            console.log(JSON.stringify(station) + 1);
+                            wx.setUserCloudStorage({
+                                KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: function (res) {
+                                }, fail: function (err) {
+                                }, complete: function () {
+                                }
+                            });
+                        }
+                        kvDataList.forEach(function (item, index) {
+                            var value = item.value;
+                            var cost_step = JSON.parse(value).cost_step;
+                            if (cost_step <= data.cost_step) {
+                                return;
+                            }
+                            else {
+                                console.log(JSON.stringify(station) + 2);
+                                wx.setUserCloudStorage({
+                                    KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: function (res) {
+                                    }, fail: function (err) {
+                                    }, complete: function () {
+                                    }
+                                });
+                            }
+                        });
+                    }, fail: function (res) { }, complete: function (res) { } });
             }
         });
+        //测试点击
+        _this.addEventListener(egret.TouchEvent.TOUCH_TAP, function (evt) {
+            console.log('子域输出点击');
+        }, _this);
         return _this;
     }
     Main.prototype.runGame = function () {
@@ -77,6 +103,9 @@ var Main = (function (_super) {
         rank.setContent(rankContent);
         rankContent.render();
         //填充内容区域的条目
+        if (this.gameData.length == 0) {
+            return;
+        }
         this.gameData.forEach(function (value, index) {
             var item = new RankItem(index, value, false);
             item.y = index * 100;
@@ -84,7 +113,6 @@ var Main = (function (_super) {
             item.width = rank.width;
             item.render();
             listContainer.addChild(item);
-            console.log(value.openid, _this.openid);
             if (value.openid == _this.openid) {
                 //展示自己的排名
                 var self_item1 = new RankItem(index, value, true);
@@ -179,12 +207,11 @@ var RankHead = (function (_super) {
 }(egret.DisplayObjectContainer));
 __reflect(RankHead.prototype, "RankHead");
 var RankInfo = (function () {
-    function RankInfo(nickname, avatarUrl, openid, score, steps) {
+    function RankInfo(nickname, avatarUrl, openid, score) {
         this.nickname = nickname;
         this.avatarUrl = avatarUrl;
         this.openid = openid;
         this.score = score;
-        this.steps = steps;
     }
     return RankInfo;
 }());
@@ -246,7 +273,7 @@ var RankItem = (function (_super) {
         nicktxt.height = 100;
         nicktxt.verticalAlign = egret.VerticalAlign.MIDDLE;
         nicktxt.text = this.value.nickname;
-        nicktxt.size = 26;
+        nicktxt.size = 20;
         this.addChild(nicktxt);
         //分数
         var numtxt = new egret.TextField();

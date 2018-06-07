@@ -1,53 +1,78 @@
 class Main extends egret.DisplayObjectContainer {
     private openid:string;
+    private gameData: RankInfo[] = [];//排行榜数据
     constructor() {
         super();
         wx.onMessage(data => {
             var that = this;
             if (data.isDisplay) {
                 this.openid = data.openid;
-                wx.getFriendCloudStorage({
-                    keyList: ["rank_score"],
-                    success: res => {
-                        this.gameData = [];//需要清空数据才行，暂时不做
-                        res.data.forEach((friendInfo, index) => {
-                            var value = JSON.parse(friendInfo.KVDataList[0].value);
-                            this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.wxgame.score, value.cost_step));
-                        });
-                        this.runGame();
-                    },
-                    fail: err => {
-                        console.log(err);
-                    },
-                    complete: () => {
-
-                    }
-                });
+                     wx.getFriendCloudStorage({
+                        keyList: ["rank_socre"],
+                        success: res => {
+                            console.log(res.data)
+                            this.gameData = [];//需要清空数据才行，暂时不做
+                            res.data.forEach((friendInfo, index) => {
+                                friendInfo.KVDataList.forEach((item,index)=>{
+                                var value = JSON.parse(item.value);
+                                this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.cost_step));
+                                })
+                            });
+                            this.runGame();
+                        },
+                        fail: err => {
+                        },
+                        complete: () => {
+                        }
+                    });
                 //监听消息 isDisplay
             } else {
                 this.cancelGame();
             }
-            if (data.update_max_station) {//更新排行榜数据
-                var score = {
-                    "wxgame": {
-                        "score": data.max_station,
-                        "update_time": new Date().toString
-                    },
-                    "cost_step": data.steps
-                };
-                wx.setUserCloudStorage({
-                    KVDataList: [{ key: "rank_score", value: JSON.stringify(score) }], success: res => {
-                        console.log(res);
-                    }, fail: err => {
-                    }, complete: () => {
 
+           if (data.update_step) {//更新排行榜数据
+                var station = {
+                    "cost_step": data.cost_step
+                };
+                console.log(JSON.stringify(station)+0)
+                wx.getUserCloudStorage({keyList:["rank_socre"],success:res=>{
+                     console.log(res);
+                    console.log(res.KVDataList);
+                    let kvDataList = res.KVDataList;
+                    if(kvDataList==null){
+                            console.log(JSON.stringify(station)+1)
+                            wx.setUserCloudStorage({
+                                KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: res => {
+                                }, fail: err => {
+                                }, complete: () => {
+                                }
+                            });
                     }
-                });
+                    kvDataList.forEach((item,index)=>{
+                        let value = item.value;
+                        let cost_step = JSON.parse(value).cost_step;
+                        if(cost_step <= data.cost_step){
+                            return;
+                        }else{
+                            console.log(JSON.stringify(station)+2)
+                            wx.setUserCloudStorage({
+                                KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: res => {
+                                }, fail: err => {
+                                }, complete: () => {
+                                }
+                            });
+                        }
+                    })
+                },fail:res=>{},complete:res=>{}});
+
+
             }
         });
+                //测试点击
+        this.addEventListener(egret.TouchEvent.TOUCH_TAP, (evt: egret.TouchEvent) => {
+            console.log('子域输出点击');
+        }, this);
     }
-
-    private gameData: RankInfo[] = [];//排行榜数据
 
     private runGame() {
         //排行榜标题
@@ -69,6 +94,9 @@ class Main extends egret.DisplayObjectContainer {
         rank.setContent(rankContent);
         rankContent.render();
         //填充内容区域的条目
+        if(this.gameData.length == 0 ){
+            return
+        }
         this.gameData.forEach(
             (value:RankInfo, index) => {
                 let item = new RankItem(index, value, false);

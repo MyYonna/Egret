@@ -49,15 +49,19 @@ var PF_BR_COLOR = 0x0C0C0C; //相框边框
 var PF_BR_WIDTH = 10;
 var APP_NEXT_STATION = "next_station";
 var APP_WAIT_STASTIC = "wait_stastic";
+var APP_BEGIN_SCENE = "begin_scene";
+var APP_BEGIN_GAME = "begin_game_png";
+var APP_RANK_BACK = "rank_back_png";
+var APP_RANK_VIEW = "rank_view_png";
+var APP_EXIT_OUT = "exit_out_png";
+var APP_REFRESH_VIEW = "refresh_view_png";
 var CURRENT_STATION_CHARACTER_PRE = "character_";
 var Main = (function (_super) {
     __extends(Main, _super);
     function Main() {
         var _this = _super.call(this) || this;
-        /**
-         * 创建游戏场景
-         */
-        _this.current_station_character_index = 1;
+        _this.index = 1;
+        _this.openDataContext = wx.getOpenDataContext();
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
         return _this;
     }
@@ -75,22 +79,27 @@ var Main = (function (_super) {
             console.log(e);
         });
     };
+    //运行游戏
     Main.prototype.runGame = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var userInfo;
+            var loginInfo, userInfo;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.loadResource()];
+                    case 0:
+                        this.checkUpdate();
+                        this.shareGame();
+                        return [4 /*yield*/, this.loadResource()];
                     case 1:
                         _a.sent();
-                        this.createGameScene();
-                        return [4 /*yield*/, platform.login()];
+                        return [4 /*yield*/, this.createBeginScene()];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, platform.getUserInfo()];
+                        return [4 /*yield*/, platform.login()];
                     case 3:
+                        loginInfo = _a.sent();
+                        return [4 /*yield*/, platform.getUserInfo()];
+                    case 4:
                         userInfo = _a.sent();
-                        console.log(userInfo);
                         return [2 /*return*/];
                 }
             });
@@ -103,7 +112,7 @@ var Main = (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 4, , 5]);
+                        _a.trys.push([0, 3, , 4]);
                         loadingView = new LoadingUI();
                         this.stage.addChild(loadingView);
                         return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
@@ -112,82 +121,133 @@ var Main = (function (_super) {
                         return [4 /*yield*/, RES.loadGroup("preload", 0, loadingView)];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, RES.loadGroup("icons", 1, loadingView)];
-                    case 3:
-                        _a.sent();
                         this.stage.removeChild(loadingView);
-                        return [3 /*break*/, 5];
-                    case 4:
+                        return [3 /*break*/, 4];
+                    case 3:
                         e_1 = _a.sent();
                         console.error(e_1);
-                        return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/];
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
     };
-    Main.prototype.createGameScene = function () {
-        //背景
-        var stageWidth = this.stage.stageWidth;
-        var stageHeight = this.stage.stageHeight;
-        var bg = new egret.Sprite();
-        bg.graphics.beginFill(APP_BG_COLOR, 1); //设置APP背景
-        bg.graphics.drawRect(0, 0, stageWidth, stageHeight);
-        bg.graphics.endFill();
-        this.addChild(bg);
-        var that = this;
-        var photoFrame = new PhotoFrame(bg);
-        var photo = new Photo(photoFrame, CURRENT_STATION_CHARACTER_PRE + this.current_station_character_index);
-        photo.addEventListener(CompleteEvent.Result, function () {
-            that.touchEnabled = true;
-            that.addEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
-            that.addEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
+    //创建开始场景
+    Main.prototype.createBeginScene = function () {
+        //标题以及背景，底部
+        this.startingMain = new StartingMain();
+        this.addChild(this.startingMain);
+        this.startingMain.render();
+        this.startingMain.touchEnabled = false;
+        this.touchEnabled = false;
+        //开始游戏监听
+        this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+            this.startingMain.startBtn.scaleX = 1.1;
+            this.startingMain.startBtn.scaleY = 1.1;
+            this.createGameScene();
         }, this);
-        this.removeEventListener(egret.TouchEvent.TOUCH_BEGIN, that.begin, that);
-        this.removeEventListener(egret.TouchEvent.TOUCH_END, that.end, that);
+        this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+            this.startingMain.startBtn.scaleX = 1;
+            this.startingMain.startBtn.scaleY = 1;
+        }, this);
+        this.startingMain.btnRank.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+            this.createScoreRank(); //关数排行
+        }, this);
     };
-    //舞台的滑动执行内部方法
-    Main.prototype.begin = function (evt) {
-        this.startX = evt.localX;
+    /**
+     * 创建游戏场景
+     */
+    Main.prototype.createGameScene = function () {
+        this.startingMain.btnRank.touchEnabled = false;
+        //监听一个图像拼接完成事件
+        this.gameMain = new GameMain(this.index);
+        this.addChild(this.gameMain);
+        this.gameMain.render();
+        //图片监听
+        this.gameMain.photo.addEventListener(CompleteEvent.Result, function (e) {
+            console.log(e.steps);
+            this.openDataContext.postMessage({
+                update_step: true,
+                cost_step: e.steps
+            });
+        }, this);
+        //排行榜
+        this.gameMain.btnRank.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+            this.createScoreRank();
+        }, this);
+        //刷新
+        this.gameMain.refreshBtn.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+            this.removeChildren();
+            this.index = Math.floor(Math.random() * 7 + 1);
+            this.createGameScene();
+        }, this);
     };
-    Main.prototype.end = function (evt) {
-        var moveXZ = evt.localX > this.startX ? true : false;
-        if (evt.localX == this.startX || (moveXZ && this.current_station_character_index == 7) || (!moveXZ && this.current_station_character_index == 1)) {
-            return;
-        }
-        if (moveXZ) {
-            this.nextListener();
+    //创建排名
+    Main.prototype.createScoreRank = function () {
+        //开放数据
+        if (this.isdisplay) {
+            this.removeChildAt(this.numChildren - 1);
+            this.startingMain.btnRank.touchEnabled = true;
+            this.isdisplay = false;
         }
         else {
-            this.preListener();
+            this.startingMain.btnRank.touchEnabled = false;
+            this.rankUi = new RankUI();
+            this.addChild(this.rankUi);
+            this.rankUi.render();
+            this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+                this.isdisplay = true;
+                this.createScoreRank();
+            }, this);
+            this.isdisplay = true;
+            //发送消息
+            this.openDataContext.postMessage({
+                isDisplay: this.isdisplay,
+                openid: this.openid
+            });
         }
-    };
-    //重新开始
-    Main.prototype.redoListener = function () {
-        this.removeChildren();
-        this.createGameScene();
-    };
-    //下一个
-    Main.prototype.nextListener = function () {
-        this.current_station_character_index++;
-        this.removeChildren();
-        this.createGameScene();
-    };
-    //下一个
-    Main.prototype.preListener = function () {
-        this.current_station_character_index--;
-        this.removeChildren();
-        this.createGameScene();
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
-     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
      */
     Main.prototype.createBitmapByName = function (name) {
         var result = new egret.Bitmap();
         var texture = RES.getRes(name);
         result.texture = texture;
         return result;
+    };
+    //冷启动更新游戏
+    Main.prototype.checkUpdate = function () {
+        if (typeof wx.getUpdateManager === 'function') {
+            var updateManager_1 = wx.getUpdateManager();
+            updateManager_1.onCheckForUpdate(function () {
+                // 请求完新版本信息的回调
+            });
+            updateManager_1.onUpdateReady(function () {
+                // 新的版本已经下载好，调用 applyUpdate 应用新版本并重启
+                updateManager_1.applyUpdate();
+            });
+            updateManager_1.onUpdateFailed(function () {
+                // 新的版本下载失败
+            });
+        }
+    };
+    Main.prototype.shareGame = function () {
+        //显示转发按钮
+        wx.showShareMenu({
+            withShareTicket: false,
+            success: function (res) { },
+            fail: function (res) { },
+            complete: function (res) { }
+        });
+        //配置转发信息
+        wx.onShareAppMessage(function () {
+            // 用户点击了“转发”按钮
+            return {
+                title: '犬夜叉之角色拼图',
+                desc: '日本战国时代，主要讲述的是初三女生日暮戈薇偶然通过自家神社的食骨之井穿越时空来到500年前的日本战国时代妖怪与人的混血半妖——犬夜叉，为寻找散落于各处的四魂之玉碎片而展开的冒险之旅',
+            };
+        });
     };
     return Main;
 }(egret.DisplayObjectContainer));
