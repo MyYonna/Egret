@@ -8,7 +8,7 @@ class ExitBtn extends egret.Bitmap{
         this.anchorOffsetX = this.width/2;
         this.anchorOffsetY = this.height/2;
         this.x = 30;
-        this.y = 30;
+        this.y = this.stage.stageHeight -30;
         this.touchEnabled = true;
         this.addEventListener(egret.TouchEvent.TOUCH_TAP,function(){
             wx.exitMiniProgram({
