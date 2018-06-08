@@ -3,6 +3,7 @@ class Main extends egret.DisplayObjectContainer {
     private gameData: RankInfo[] = [];//排行榜数据
     constructor() {
         super();
+        
         wx.onMessage(data => {
             var that = this;
             if (data.isDisplay) {
@@ -10,13 +11,14 @@ class Main extends egret.DisplayObjectContainer {
                      wx.getFriendCloudStorage({
                         keyList: ["rank_socre"],
                         success: res => {
-                            console.log(res.data)
                             this.gameData = [];//需要清空数据才行，暂时不做
                             res.data.forEach((friendInfo, index) => {
-                                friendInfo.KVDataList.forEach((item,index)=>{
-                                var value = JSON.parse(item.value);
-                                this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.cost_step));
-                                })
+                                if(Object.keys(friendInfo.KVDataList).length>0){
+                                    friendInfo.KVDataList.forEach((item,index)=>{
+                                    var value = JSON.parse(item.value);
+                                    this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.cost_step));
+                                    })
+                                }
                             });
                             this.runGame();
                         },
@@ -34,35 +36,35 @@ class Main extends egret.DisplayObjectContainer {
                 var station = {
                     "cost_step": data.cost_step
                 };
-                console.log(JSON.stringify(station)+0)
                 wx.getUserCloudStorage({keyList:["rank_socre"],success:res=>{
-                     console.log(res);
-                    console.log(res.KVDataList);
                     let kvDataList = res.KVDataList;
-                    if(kvDataList==null){
-                            console.log(JSON.stringify(station)+1)
+                    if(Object.keys(kvDataList).length==0){
                             wx.setUserCloudStorage({
                                 KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: res => {
+                                    console.log(res)
                                 }, fail: err => {
+                                    console.log(err)
                                 }, complete: () => {
                                 }
                             });
+                    }else{
+                        kvDataList.forEach((item,index)=>{
+                            let value = item.value;
+                            let cost_step = JSON.parse(value).cost_step;
+                            if(cost_step <= data.cost_step){
+                                return;
+                            }else{
+                                wx.setUserCloudStorage({
+                                    KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: res => {
+                                        console.log(res)
+                                    }, fail: err => {
+                                        console.log(err)
+                                    }, complete: () => {
+                                    }
+                                });
+                            }
+                        })
                     }
-                    kvDataList.forEach((item,index)=>{
-                        let value = item.value;
-                        let cost_step = JSON.parse(value).cost_step;
-                        if(cost_step <= data.cost_step){
-                            return;
-                        }else{
-                            console.log(JSON.stringify(station)+2)
-                            wx.setUserCloudStorage({
-                                KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: res => {
-                                }, fail: err => {
-                                }, complete: () => {
-                                }
-                            });
-                        }
-                    })
                 },fail:res=>{},complete:res=>{}});
 
 

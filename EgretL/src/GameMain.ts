@@ -34,6 +34,7 @@ class GameMain extends egret.DisplayObjectContainer{
         this.addChild(this.imgPre);
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.beginPreviewImage,this);
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_END,this.endPreviewImage,this);
+        this.imgPre.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE,this.endPreviewImage,this);
         //排行榜
         this.btnRank = new RankBtn(RES.getRes(APP_RANK_VIEW));
         this.addChild(this.btnRank);
@@ -56,7 +57,7 @@ class GameMain extends egret.DisplayObjectContainer{
         imgPre.scaleY = 1.1;
 
         let complete_img = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE+this.index));
-        var scale =   complete_img.width >  complete_img.height?(this.photo.width) / complete_img.width:(this.photo.height) / complete_img.height;
+        var scale =   complete_img.width >  complete_img.height?(this.photo.width-4) / complete_img.width:(this.photo.height-4) / complete_img.height;
         //为整张图片适配预定义的相框，得到缩放比
         complete_img.width = complete_img.width * scale;
         complete_img.height = complete_img.height * scale;

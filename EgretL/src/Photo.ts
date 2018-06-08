@@ -15,9 +15,15 @@ class Photo extends egret.DisplayObjectContainer {
         //为整张图片适配预定义的相框，得到缩放比
         this.pimg.width = this.pimg.width * scale;
         this.pimg.height = this.pimg.height * scale;
+        this.pimg.anchorOffsetX =  this.pimg.width /2;
+        this.pimg.anchorOffsetY =  this.pimg.height /2;
+
         //设置本容器的属性
-        this.width = this.pimg.width;
-        this.height = this.pimg.height;
+        this.width = this.pimg.width+4;
+        this.height = this.pimg.height+4;
+
+        this.pimg.x = this.width/2;
+        this.pimg.y = this.height/2;
         //重新设置锚点
         this.anchorOffsetX = this.width/2;
         this.anchorOffsetY = this.height/2;
@@ -137,12 +143,11 @@ class Photo extends egret.DisplayObjectContainer {
         let random_j = Math.floor(Math.random()*4);
         for (var i = 0; i < 4; i++) {
             for (var j = 0; j < 4; j++) {
-                //将最后的一张图片不显示
                 var renderTexture: egret.RenderTexture = new egret.RenderTexture();
-                renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH));
+                renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH),1);
                 var sub_img: egret.Bitmap = new egret.Bitmap(renderTexture);
-                sub_img.x =  i * (dImgW + 2);
-                sub_img.y =  j * (dImgH + 2);
+                sub_img.x =  (i * (dImgW + 2))+2;
+                sub_img.y =  (j * (dImgH + 2))+2;
                 //将图片的包围盒保存起来，用于后期做碰撞检测
 
                 if (i == random_i && j == random_j) {
@@ -160,6 +165,7 @@ class Photo extends egret.DisplayObjectContainer {
                 //为图片添加鼠标事件
                 sub_img.touchEnabled = true;
                 sub_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, this.mouseUp, this);
                 sub_img.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
             }
         }
@@ -178,12 +184,10 @@ class Photo extends egret.DisplayObjectContainer {
         this._touchStatus = true;
         this._distance.x = evt.stageX-this.x - this.target.x;
         this._distance.y = evt.stageY-this.y - this.target.y;
-        this.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
     }
     //鼠标弹起
     
     private mouseUp(evt: egret.TouchEvent): void {
-        this.removeEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
         var target = this.target;
         var moveY: number = evt.stageY;
         var moveX: number = evt.stageX;
@@ -195,16 +199,16 @@ class Photo extends egret.DisplayObjectContainer {
                 ifX = false;
                 if ((moveY - (this._distance.y + target.y+this.y)) > 0) {
                     //说明是往Y正方向移动
-                    moveDistance = this.pimg.height / 4 + 2;
+                    moveDistance = this.pimg.height / 4 + 2; 
                 } else {
                     //说明是往Y负方向移动
-                      moveDistance = - (this.pimg.height / 4 + 2);
+                    moveDistance = - (this.pimg.height / 4 + 2);
                    
                 }
             } else if (Math.abs(moveY - (this._distance.y + target.y+this.y)) < Math.abs(moveX - (this._distance.x + target.x+this.x))) {
                 if ((moveX - (this._distance.x + target.x+this.x)) > 0) {
                     //说明是往X正方向移动
-                     moveDistance = this.pimg.width / 4 + 2
+                     moveDistance = this.pimg.width / 4 + 2;
                 } else {
                     //说明是往X负方向移动
                      moveDistance = - (this.pimg.width / 4 + 2)
@@ -289,8 +293,8 @@ class Photo extends egret.DisplayObjectContainer {
     //重置容器属性
     private resetPhoto(flag:boolean){
         //重新设置本容器的属性
-        this.width = flag?this.pimg.width+2*3:this.pimg.width;
-        this.height =  flag?this.pimg.height+2*3:this.pimg.height;
+        this.width = flag?this.pimg.width+2*3+4:this.pimg.width+4;
+        this.height =  flag?this.pimg.height+2*3+4:this.pimg.height+4;
         //重新重新设置锚点
         this.anchorOffsetX = this.width/2;
         this.anchorOffsetY = this.height/2;
@@ -314,9 +318,9 @@ class Photo extends egret.DisplayObjectContainer {
             var bridgeX:number,bridgeY:number;
             bridgeX = this.sub_imgs[i].x;
             bridgeY = this.sub_imgs[i].y;
-            this.parent.setChildIndex(this.sub_imgs[i],this.parent.numChildren);
+            this.setChildIndex(this.sub_imgs[i],this.parent.numChildren);
             egret.Tween.get(this.sub_imgs[i]).to({ x:this.sub_imgs[targetIndex].x,y:this.sub_imgs[targetIndex].y}, 500);
-            this.parent.setChildIndex(this.sub_imgs[targetIndex],this.parent.numChildren);
+            this.setChildIndex(this.sub_imgs[targetIndex],this.parent.numChildren);
             egret.Tween.get(this.sub_imgs[targetIndex]).to({ x:bridgeX,y:bridgeY}, 500);
 
             this.sub_rects[i].x = this.sub_rects[targetIndex].x;

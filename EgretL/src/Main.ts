@@ -51,29 +51,29 @@ class Main extends egret.DisplayObjectContainer {
         const loginInfo =  await platform.login();
         const userInfo = await platform.getUserInfo();
         
-        // var request = new egret.HttpRequest();
-        // request.responseType = egret.HttpResponseType.TEXT;
-        // //设置为 POST 请求
-        // var params = "?code="+loginInfo.code;
-        // request.open("http://flow.go.gionee.com/wx/checkLogin.json"+params,egret.HttpMethod.GET);
-        // request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        // request.send();
-        // request.addEventListener(egret.Event.COMPLETE,function(event:egret.Event){
-        //     var request = <egret.HttpRequest>event.currentTarget;
-        //     let response = JSON.parse(request.response);
-        //     if(response.errcode){
-        //         this.openid = "";
-        //     }else{
-        //         this.openid = response.openid;
-        //     }
+        var request = new egret.HttpRequest();
+        request.responseType = egret.HttpResponseType.TEXT;
+        //设置为 POST 请求
+        var params = "?code="+loginInfo.code;
+        request.open("http://flow.go.gionee.com/wx/checkLogin.json"+params,egret.HttpMethod.GET);
+        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        request.send();
+        request.addEventListener(egret.Event.COMPLETE,function(event:egret.Event){
+            var request = <egret.HttpRequest>event.currentTarget;
+            let response = JSON.parse(request.response);
+            if(response.errcode){
+                this.openid = "";
+            }else{
+                this.openid = response.openid;
+            }
 
-        // },this);
-        // request.addEventListener(egret.IOErrorEvent.IO_ERROR,function(){
-        //      this.openid = "";
-        // },this);
-        // request.addEventListener(egret.ProgressEvent.PROGRESS,function(){
-        //      this.openid = "";
-        // },this);
+        },this);
+        request.addEventListener(egret.IOErrorEvent.IO_ERROR,function(){
+             this.openid = "";
+        },this);
+        request.addEventListener(egret.ProgressEvent.PROGRESS,function(){
+             this.openid = "";
+        },this);
     }
 
     //加载资源文件和资源
@@ -95,7 +95,6 @@ class Main extends egret.DisplayObjectContainer {
         //标题以及背景，底部
         this.startingMain = new StartingMain();
         this.addChild(this.startingMain);
-        this.stage.frameRate = 30;
         // //开始游戏监听
         this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function(){
             this.startingMain.startBtn.scaleX = 1.1;

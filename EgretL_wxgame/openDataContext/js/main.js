@@ -20,13 +20,14 @@ var Main = (function (_super) {
                 wx.getFriendCloudStorage({
                     keyList: ["rank_socre"],
                     success: function (res) {
-                        console.log(res.data);
                         _this.gameData = []; //需要清空数据才行，暂时不做
                         res.data.forEach(function (friendInfo, index) {
-                            friendInfo.KVDataList.forEach(function (item, index) {
-                                var value = JSON.parse(item.value);
-                                _this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.cost_step));
-                            });
+                            if (Object.keys(friendInfo.KVDataList).length > 0) {
+                                friendInfo.KVDataList.forEach(function (item, index) {
+                                    var value = JSON.parse(item.value);
+                                    _this.gameData.push(new RankInfo(friendInfo.nickname, friendInfo.avatarUrl, friendInfo.openid, value.cost_step));
+                                });
+                            }
                         });
                         _this.runGame();
                     },
@@ -44,36 +45,37 @@ var Main = (function (_super) {
                 var station = {
                     "cost_step": data.cost_step
                 };
-                console.log(JSON.stringify(station) + 0);
                 wx.getUserCloudStorage({ keyList: ["rank_socre"], success: function (res) {
-                        console.log(res);
-                        console.log(res.KVDataList);
                         var kvDataList = res.KVDataList;
-                        if (kvDataList == null) {
-                            console.log(JSON.stringify(station) + 1);
+                        if (Object.keys(kvDataList).length == 0) {
                             wx.setUserCloudStorage({
                                 KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: function (res) {
+                                    console.log(res);
                                 }, fail: function (err) {
+                                    console.log(err);
                                 }, complete: function () {
                                 }
                             });
                         }
-                        kvDataList.forEach(function (item, index) {
-                            var value = item.value;
-                            var cost_step = JSON.parse(value).cost_step;
-                            if (cost_step <= data.cost_step) {
-                                return;
-                            }
-                            else {
-                                console.log(JSON.stringify(station) + 2);
-                                wx.setUserCloudStorage({
-                                    KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: function (res) {
-                                    }, fail: function (err) {
-                                    }, complete: function () {
-                                    }
-                                });
-                            }
-                        });
+                        else {
+                            kvDataList.forEach(function (item, index) {
+                                var value = item.value;
+                                var cost_step = JSON.parse(value).cost_step;
+                                if (cost_step <= data.cost_step) {
+                                    return;
+                                }
+                                else {
+                                    wx.setUserCloudStorage({
+                                        KVDataList: [{ key: "rank_socre", value: JSON.stringify(station) }], success: function (res) {
+                                            console.log(res);
+                                        }, fail: function (err) {
+                                            console.log(err);
+                                        }, complete: function () {
+                                        }
+                                    });
+                                }
+                            });
+                        }
                     }, fail: function (res) { }, complete: function (res) { } });
             }
         });

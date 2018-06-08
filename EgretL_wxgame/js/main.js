@@ -75,9 +75,13 @@ var Photo = (function (_super) {
                         //为整张图片适配预定义的相框，得到缩放比
                         this.pimg.width = this.pimg.width * scale;
                         this.pimg.height = this.pimg.height * scale;
+                        this.pimg.anchorOffsetX = this.pimg.width / 2;
+                        this.pimg.anchorOffsetY = this.pimg.height / 2;
                         //设置本容器的属性
-                        this.width = this.pimg.width;
-                        this.height = this.pimg.height;
+                        this.width = this.pimg.width + 4;
+                        this.height = this.pimg.height + 4;
+                        this.pimg.x = this.width / 2;
+                        this.pimg.y = this.height / 2;
                         //重新设置锚点
                         this.anchorOffsetX = this.width / 2;
                         this.anchorOffsetY = this.height / 2;
@@ -174,12 +178,11 @@ var Photo = (function (_super) {
         var random_j = Math.floor(Math.random() * 4);
         for (var i = 0; i < 4; i++) {
             for (var j = 0; j < 4; j++) {
-                //将最后的一张图片不显示
                 var renderTexture = new egret.RenderTexture();
-                renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH));
+                renderTexture.drawToTexture(img, new egret.Rectangle(i * dImgW, j * dImgH, dImgW, dImgH), 1);
                 var sub_img = new egret.Bitmap(renderTexture);
-                sub_img.x = i * (dImgW + 2);
-                sub_img.y = j * (dImgH + 2);
+                sub_img.x = (i * (dImgW + 2)) + 2;
+                sub_img.y = (j * (dImgH + 2)) + 2;
                 //将图片的包围盒保存起来，用于后期做碰撞检测
                 if (i == random_i && j == random_j) {
                     this.sub_rects.push(null);
@@ -196,6 +199,7 @@ var Photo = (function (_super) {
                 //为图片添加鼠标事件
                 sub_img.touchEnabled = true;
                 sub_img.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.mouseDown, this);
+                sub_img.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, this.mouseUp, this);
                 sub_img.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
             }
         }
@@ -208,11 +212,9 @@ var Photo = (function (_super) {
         this._touchStatus = true;
         this._distance.x = evt.stageX - this.x - this.target.x;
         this._distance.y = evt.stageY - this.y - this.target.y;
-        this.addEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
     };
     //鼠标弹起
     Photo.prototype.mouseUp = function (evt) {
-        this.removeEventListener(egret.TouchEvent.TOUCH_END, this.mouseUp, this);
         var target = this.target;
         var moveY = evt.stageY;
         var moveX = evt.stageX;
@@ -321,8 +323,8 @@ var Photo = (function (_super) {
     //重置容器属性
     Photo.prototype.resetPhoto = function (flag) {
         //重新设置本容器的属性
-        this.width = flag ? this.pimg.width + 2 * 3 : this.pimg.width;
-        this.height = flag ? this.pimg.height + 2 * 3 : this.pimg.height;
+        this.width = flag ? this.pimg.width + 2 * 3 + 4 : this.pimg.width + 4;
+        this.height = flag ? this.pimg.height + 2 * 3 + 4 : this.pimg.height + 4;
         //重新重新设置锚点
         this.anchorOffsetX = this.width / 2;
         this.anchorOffsetY = this.height / 2;
@@ -346,9 +348,9 @@ var Photo = (function (_super) {
         var bridgeX, bridgeY;
         bridgeX = this.sub_imgs[i].x;
         bridgeY = this.sub_imgs[i].y;
-        this.parent.setChildIndex(this.sub_imgs[i], this.parent.numChildren);
+        this.setChildIndex(this.sub_imgs[i], this.parent.numChildren);
         egret.Tween.get(this.sub_imgs[i]).to({ x: this.sub_imgs[targetIndex].x, y: this.sub_imgs[targetIndex].y }, 500);
-        this.parent.setChildIndex(this.sub_imgs[targetIndex], this.parent.numChildren);
+        this.setChildIndex(this.sub_imgs[targetIndex], this.parent.numChildren);
         egret.Tween.get(this.sub_imgs[targetIndex]).to({ x: bridgeX, y: bridgeY }, 500);
         this.sub_rects[i].x = this.sub_rects[targetIndex].x;
         this.sub_rects[i].y = this.sub_rects[targetIndex].y;
@@ -420,6 +422,7 @@ var GameMain = (function (_super) {
         this.addChild(this.imgPre);
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.beginPreviewImage, this);
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_END, this.endPreviewImage, this);
+        this.imgPre.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, this.endPreviewImage, this);
         //排行榜
         this.btnRank = new RankBtn(RES.getRes(APP_RANK_VIEW));
         this.addChild(this.btnRank);
@@ -440,7 +443,7 @@ var GameMain = (function (_super) {
         imgPre.scaleX = 1.1;
         imgPre.scaleY = 1.1;
         var complete_img = new egret.Bitmap(RES.getRes(CURRENT_STATION_CHARACTER_PRE + this.index));
-        var scale = complete_img.width > complete_img.height ? (this.photo.width) / complete_img.width : (this.photo.height) / complete_img.height;
+        var scale = complete_img.width > complete_img.height ? (this.photo.width - 4) / complete_img.width : (this.photo.height - 4) / complete_img.height;
         //为整张图片适配预定义的相框，得到缩放比
         complete_img.width = complete_img.width * scale;
         complete_img.height = complete_img.height * scale;
@@ -609,7 +612,7 @@ var Main = (function (_super) {
     //运行游戏
     Main.prototype.runGame = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var loginInfo, userInfo;
+            var loginInfo, userInfo, request, params;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -627,6 +630,28 @@ var Main = (function (_super) {
                         return [4 /*yield*/, platform.getUserInfo()];
                     case 4:
                         userInfo = _a.sent();
+                        request = new egret.HttpRequest();
+                        request.responseType = egret.HttpResponseType.TEXT;
+                        params = "?code=" + loginInfo.code;
+                        request.open("http://flow.go.gionee.com/wx/checkLogin.json" + params, egret.HttpMethod.GET);
+                        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        request.send();
+                        request.addEventListener(egret.Event.COMPLETE, function (event) {
+                            var request = event.currentTarget;
+                            var response = JSON.parse(request.response);
+                            if (response.errcode) {
+                                this.openid = "";
+                            }
+                            else {
+                                this.openid = response.openid;
+                            }
+                        }, this);
+                        request.addEventListener(egret.IOErrorEvent.IO_ERROR, function () {
+                            this.openid = "";
+                        }, this);
+                        request.addEventListener(egret.ProgressEvent.PROGRESS, function () {
+                            this.openid = "";
+                        }, this);
                         return [2 /*return*/];
                 }
             });
@@ -664,7 +689,6 @@ var Main = (function (_super) {
         //标题以及背景，底部
         this.startingMain = new StartingMain();
         this.addChild(this.startingMain);
-        this.stage.frameRate = 30;
         // //开始游戏监听
         this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
             this.startingMain.startBtn.scaleX = 1.1;
@@ -933,9 +957,9 @@ var RefreshBtn = (function (_super) {
     }
     RefreshBtn.prototype.render = function () {
         this.anchorOffsetY = this.height / 2;
-        this.anchorOffsetX = this.width;
-        this.x = this.stage.width - 100;
-        this.y = this.stage.height - 75;
+        this.anchorOffsetX = this.width / 2;
+        this.x = this.stage.stageWidth - 80;
+        this.y = this.stage.stageHeight - 75;
         this.touchEnabled = true;
     };
     return RefreshBtn;
@@ -993,8 +1017,6 @@ var StartingMain = (function (_super) {
         return _this;
     }
     StartingMain.prototype.render = function () {
-        // this.stage.stageWidth = this.stage.stageWidth;
-        // this.stage.stageHeight = this.stage.stageHeight;
         this.touchEnabled = false;
         //背景
         this.begin_bg = new egret.Shape();

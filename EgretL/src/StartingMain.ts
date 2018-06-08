@@ -10,8 +10,6 @@ class StartingMain extends egret.DisplayObjectContainer{
     }
 
     public render(){
-        // this.stage.stageWidth = this.stage.stageWidth;
-        // this.stage.stageHeight = this.stage.stageHeight;
         this.touchEnabled = false;
         //背景
         this.begin_bg = new egret.Shape();

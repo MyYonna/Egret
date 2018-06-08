@@ -5,9 +5,9 @@ class RefreshBtn extends egret.Bitmap{
     }
     public render(){
         this.anchorOffsetY = this.height / 2;
-        this.anchorOffsetX = this.width;
-        this.x = this.stage.width - 100;
-        this.y = this.stage.height -75;
+        this.anchorOffsetX = this.width/2;
+        this.x = this.stage.stageWidth - 80;
+        this.y = this.stage.stageHeight -75;
         this.touchEnabled = true;
 
     }
