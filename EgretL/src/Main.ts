@@ -95,10 +95,8 @@ class Main extends egret.DisplayObjectContainer {
         //标题以及背景，底部
         this.startingMain = new StartingMain();
         this.addChild(this.startingMain);
-        this.startingMain.render();
-        this.startingMain.touchEnabled = false;
-        this.touchEnabled = false;
-        //开始游戏监听
+        this.stage.frameRate = 30;
+        // //开始游戏监听
         this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function(){
             this.startingMain.startBtn.scaleX = 1.1;
             this.startingMain.startBtn.scaleY = 1.1;
@@ -122,10 +120,8 @@ class Main extends egret.DisplayObjectContainer {
         //监听一个图像拼接完成事件
         this.gameMain = new GameMain(this.index); 
         this.addChild(this.gameMain);
-        this.gameMain.render();
         //图片监听
         this.gameMain.photo.addEventListener(CompleteEvent.Result,function(e:CompleteEvent){
-            console.log(e.steps)
             this.openDataContext.postMessage({
                 update_step:true,
                 cost_step:e.steps
@@ -154,7 +150,6 @@ class Main extends egret.DisplayObjectContainer {
             this.startingMain.btnRank.touchEnabled = false;
             this.rankUi = new RankUI();
             this.addChild(this.rankUi);
-            this.rankUi.render();
             this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
                 this.isdisplay = true;
                 this.createScoreRank();

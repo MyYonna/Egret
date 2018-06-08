@@ -1,6 +1,7 @@
 class ExitBtn extends egret.Bitmap{
     public constructor(res:egret.Texture){
         super(res);
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
 
     public render(){

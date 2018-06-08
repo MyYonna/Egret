@@ -138,21 +138,20 @@ var Main = (function (_super) {
         this.startingMain = new StartingMain();
         this.addChild(this.startingMain);
         this.startingMain.render();
-        this.startingMain.touchEnabled = false;
-        this.touchEnabled = false;
-        //开始游戏监听
-        this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
-            this.startingMain.startBtn.scaleX = 1.1;
-            this.startingMain.startBtn.scaleY = 1.1;
-            this.createGameScene();
-        }, this);
-        this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_END, function () {
-            this.startingMain.startBtn.scaleX = 1;
-            this.startingMain.startBtn.scaleY = 1;
-        }, this);
-        this.startingMain.btnRank.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
-            this.createScoreRank(); //关数排行
-        }, this);
+        this.stage.frameRate = 30;
+        // //开始游戏监听
+        // this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function(){
+        //     this.startingMain.startBtn.scaleX = 1.1;
+        //     this.startingMain.startBtn.scaleY = 1.1;
+        //     this.createGameScene();
+        // },this)
+        // this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_END,function(){
+        //     this.startingMain.startBtn.scaleX = 1;
+        //     this.startingMain.startBtn.scaleY = 1
+        // },this);
+        // this.startingMain.btnRank.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
+        //     this.createScoreRank();//关数排行
+        // },this);
     };
     /**
      * 创建游戏场景

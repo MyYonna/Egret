@@ -4,6 +4,7 @@ class Photo extends egret.DisplayObjectContainer {
     public constructor(res:string) {
         super();
         this.res = res;
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
     private main_rect:egret.Rectangle;
     public async render() {

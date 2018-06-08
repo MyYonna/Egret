@@ -1,6 +1,7 @@
 class HomeBtn extends egret.DisplayObjectContainer{
     public constructor(){
         super();
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
 
     public render(){

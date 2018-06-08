@@ -1,6 +1,7 @@
 class RefreshBtn extends egret.Bitmap{
     public constructor(res:egret.Texture){
         super(res);
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
     public render(){
         this.anchorOffsetY = this.height / 2;

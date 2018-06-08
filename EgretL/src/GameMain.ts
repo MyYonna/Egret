@@ -9,7 +9,7 @@ class GameMain extends egret.DisplayObjectContainer{
     public constructor(index:number){
         super();
         this.index = index;
-
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
     public render(){
         var stageWidth = this.stage.stageWidth;
@@ -22,30 +22,24 @@ class GameMain extends egret.DisplayObjectContainer{
         //相框
         this.photoFrame = new PhotoFrame();
         this.addChild(this.photoFrame);
-        this.photoFrame.render();
         //相片
         this.photo = new Photo(CURRENT_STATION_CHARACTER_PRE+this.index);
         this.photoFrame.addChild(this.photo);
-        this.photo.render();
 
         //退出小程序
         this.exitBtn = new ExitBtn(RES.getRes(APP_EXIT_OUT));
         this.addChild(this.exitBtn);
-        this.exitBtn.render();
         //预览按钮
         this.imgPre = new ImagePreview(this.index,this.photo);
         this.addChild(this.imgPre);
-        this.imgPre.render();
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_BEGIN,this.beginPreviewImage,this);
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_END,this.endPreviewImage,this);
         //排行榜
         this.btnRank = new RankBtn(RES.getRes(APP_RANK_VIEW));
         this.addChild(this.btnRank);
-        this.btnRank.render();
         //重新开始
         this.refreshBtn = new RefreshBtn(RES.getRes(APP_REFRESH_VIEW));
         this.addChild(this.refreshBtn);
-        this.refreshBtn.render();
 
     }
     //弹起的监听事件

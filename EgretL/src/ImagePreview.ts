@@ -7,6 +7,7 @@ class ImagePreview extends egret.DisplayObjectContainer{
         super();
         this.index = index;
         this.photo = photo;
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
     public async render(){
         //加载图片

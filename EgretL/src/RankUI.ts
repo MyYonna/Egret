@@ -5,6 +5,7 @@ class RankUI extends egret.DisplayObjectContainer{
     public btnClose:egret.Bitmap;
     public constructor(){
         super();
+        this.addEventListener(egret.Event.ADDED_TO_STAGE,this.render,this);
     }
     public render(){
         this.width = this.stage.stageWidth;

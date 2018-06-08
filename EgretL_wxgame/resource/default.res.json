@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "begin_scene,rank_back_png,rank_view_png,exit_out_png,page_home_png,start_game_png,refresh_view_png",
+			"keys": "begin_scene,rank_back_png,rank_view_png,exit_out_png,page_home_png,start_game_png,refresh_view_png,begin_title_png",
 			"name": "preload"
 		}
 	],
@@ -85,6 +85,11 @@
 			"name": "refresh_view_png",
 			"type": "image",
 			"url": "assets/refresh_view.png"
+		},
+		{	
+			"name":"begin_title_png",
+			"type":"image",
+			"url":"assets/begin_title.png"
 		}
 	]
 }

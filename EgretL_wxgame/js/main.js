@@ -56,6 +56,7 @@ var Photo = (function (_super) {
         _this._distance = new egret.Point();
         _this.steps = 0;
         _this.res = res;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
     Photo.prototype.render = function () {
@@ -394,6 +395,7 @@ var GameMain = (function (_super) {
     function GameMain(index) {
         var _this = _super.call(this) || this;
         _this.index = index;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
     GameMain.prototype.render = function () {
@@ -407,29 +409,23 @@ var GameMain = (function (_super) {
         //相框
         this.photoFrame = new PhotoFrame();
         this.addChild(this.photoFrame);
-        this.photoFrame.render();
         //相片
         this.photo = new Photo(CURRENT_STATION_CHARACTER_PRE + this.index);
         this.photoFrame.addChild(this.photo);
-        this.photo.render();
         //退出小程序
         this.exitBtn = new ExitBtn(RES.getRes(APP_EXIT_OUT));
         this.addChild(this.exitBtn);
-        this.exitBtn.render();
         //预览按钮
         this.imgPre = new ImagePreview(this.index, this.photo);
         this.addChild(this.imgPre);
-        this.imgPre.render();
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.beginPreviewImage, this);
         this.imgPre.addEventListener(egret.TouchEvent.TOUCH_END, this.endPreviewImage, this);
         //排行榜
         this.btnRank = new RankBtn(RES.getRes(APP_RANK_VIEW));
         this.addChild(this.btnRank);
-        this.btnRank.render();
         //重新开始
         this.refreshBtn = new RefreshBtn(RES.getRes(APP_REFRESH_VIEW));
         this.addChild(this.refreshBtn);
-        this.refreshBtn.render();
     };
     //弹起的监听事件
     GameMain.prototype.endPreviewImage = function (event) {
@@ -460,7 +456,9 @@ __reflect(GameMain.prototype, "GameMain");
 var HomeBtn = (function (_super) {
     __extends(HomeBtn, _super);
     function HomeBtn() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     HomeBtn.prototype.render = function () {
         var homeBtn = new egret.Bitmap(RES.getRes("page_home_png"));
@@ -478,6 +476,7 @@ var ImagePreview = (function (_super) {
         var _this = _super.call(this) || this;
         _this.index = index;
         _this.photo = photo;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
     ImagePreview.prototype.render = function () {
@@ -665,10 +664,8 @@ var Main = (function (_super) {
         //标题以及背景，底部
         this.startingMain = new StartingMain();
         this.addChild(this.startingMain);
-        this.startingMain.render();
-        this.startingMain.touchEnabled = false;
-        this.touchEnabled = false;
-        //开始游戏监听
+        this.stage.frameRate = 30;
+        // //开始游戏监听
         this.startingMain.startBtn.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
             this.startingMain.startBtn.scaleX = 1.1;
             this.startingMain.startBtn.scaleY = 1.1;
@@ -690,10 +687,8 @@ var Main = (function (_super) {
         //监听一个图像拼接完成事件
         this.gameMain = new GameMain(this.index);
         this.addChild(this.gameMain);
-        this.gameMain.render();
         //图片监听
         this.gameMain.photo.addEventListener(CompleteEvent.Result, function (e) {
-            console.log(e.steps);
             this.openDataContext.postMessage({
                 update_step: true,
                 cost_step: e.steps
@@ -722,7 +717,6 @@ var Main = (function (_super) {
             this.startingMain.btnRank.touchEnabled = false;
             this.rankUi = new RankUI();
             this.addChild(this.rankUi);
-            this.rankUi.render();
             this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
                 this.isdisplay = true;
                 this.createScoreRank();
@@ -783,7 +777,9 @@ __reflect(Main.prototype, "Main");
 var ExitBtn = (function (_super) {
     __extends(ExitBtn, _super);
     function ExitBtn(res) {
-        return _super.call(this, res) || this;
+        var _this = _super.call(this, res) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     ExitBtn.prototype.render = function () {
         this.anchorOffsetX = this.width / 2;
@@ -805,7 +801,9 @@ __reflect(ExitBtn.prototype, "ExitBtn");
 var PhotoFrame = (function (_super) {
     __extends(PhotoFrame, _super);
     function PhotoFrame() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     PhotoFrame.prototype.render = function () {
         //设置本容器的属性
@@ -857,12 +855,15 @@ if (!window.platform) {
 var RankBtn = (function (_super) {
     __extends(RankBtn, _super);
     function RankBtn(res) {
-        return _super.call(this, res) || this;
+        var _this = _super.call(this, res) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     RankBtn.prototype.render = function () {
         this.anchorOffsetY = this.height / 2;
-        this.x = 30;
-        this.y = this.stage.height - 75;
+        this.anchorOffsetX = this.width / 2;
+        this.x = 80;
+        this.y = this.stage.stageHeight - 75;
         this.touchEnabled = true;
     };
     return RankBtn;
@@ -871,7 +872,9 @@ __reflect(RankBtn.prototype, "RankBtn");
 var RankUI = (function (_super) {
     __extends(RankUI, _super);
     function RankUI() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     RankUI.prototype.render = function () {
         this.width = this.stage.stageWidth;
@@ -924,7 +927,9 @@ __reflect(RankUI.prototype, "RankUI");
 var RefreshBtn = (function (_super) {
     __extends(RefreshBtn, _super);
     function RefreshBtn(res) {
-        return _super.call(this, res) || this;
+        var _this = _super.call(this, res) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     RefreshBtn.prototype.render = function () {
         this.anchorOffsetY = this.height / 2;
@@ -939,7 +944,9 @@ __reflect(RefreshBtn.prototype, "RefreshBtn");
 var StartBtn = (function (_super) {
     __extends(StartBtn, _super);
     function StartBtn() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
     }
     StartBtn.prototype.render = function () {
         //背景
@@ -982,60 +989,44 @@ var StartingMain = (function (_super) {
     __extends(StartingMain, _super);
     function StartingMain() {
         var _this = _super.call(this) || this;
-        _this.startBtn = new StartBtn();
-        _this.btnRank = new egret.Bitmap(RES.getRes(APP_RANK_VIEW));
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
     StartingMain.prototype.render = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        this.width = this.stage.stageWidth;
-                        this.height = this.stage.stageHeight;
-                        //背景
-                        this.begin_bg = new egret.Shape();
-                        this.begin_bg.graphics.beginFill(0x8c8f98, 1);
-                        this.begin_bg.graphics.drawRect(0, 0, this.width, this.height);
-                        this.begin_bg.graphics.endFill();
-                        this.addChild(this.begin_bg);
-                        //开始标题
-                        return [4 /*yield*/, RES.getResAsync("begin_title_png")];
-                    case 1:
-                        //开始标题
-                        _a.sent();
-                        this.begin_title = new egret.Bitmap(RES.getRes("begin_title_png"));
-                        this.begin_title.height = this.begin_title.height * (300 / this.begin_title.width);
-                        this.begin_title.width = 300;
-                        this.begin_title.anchorOffsetX = this.begin_title.width / 2;
-                        this.begin_title.anchorOffsetY = this.begin_title.height / 2;
-                        this.begin_title.x = this.width / 2;
-                        this.begin_title.y = this.height * 0.2;
-                        this.addChild(this.begin_title);
-                        //开始游戏
-                        this.addChild(this.startBtn);
-                        this.startBtn.touchEnabled = true;
-                        this.startBtn.render();
-                        //底部
-                        this.end_bg = new egret.Shape();
-                        this.end_bg.graphics.beginFill(0x727378, 1);
-                        this.end_bg.graphics.drawRect(0, 0, this.width, 150);
-                        this.end_bg.graphics.endFill();
-                        this.end_bg.anchorOffsetY = this.end_bg.height;
-                        this.end_bg.y = this.height;
-                        this.addChild(this.end_bg);
-                        //排行榜查看按钮
-                        this.btnRank.anchorOffsetY = this.btnRank.height / 2;
-                        this.btnRank.anchorOffsetX = this.btnRank.width / 2;
-                        this.btnRank.x = 80;
-                        this.btnRank.y = this.height - 75;
-                        //简单实现，打开这关闭使用一个按钮。
-                        this.addChild(this.btnRank);
-                        this.btnRank.touchEnabled = true;
-                        return [2 /*return*/];
-                }
-            });
-        });
+        // this.stage.stageWidth = this.stage.stageWidth;
+        // this.stage.stageHeight = this.stage.stageHeight;
+        this.touchEnabled = false;
+        //背景
+        this.begin_bg = new egret.Shape();
+        this.begin_bg.graphics.beginFill(0x8c8f98, 1);
+        this.begin_bg.graphics.drawRect(0, 0, this.stage.stageWidth, this.stage.stageHeight);
+        this.begin_bg.graphics.endFill();
+        this.begin_bg.touchEnabled = false;
+        this.addChild(this.begin_bg);
+        //开始标题
+        this.begin_title = new egret.Bitmap(RES.getRes("begin_title_png"));
+        this.begin_title.height = this.begin_title.height * (300 / this.begin_title.width);
+        this.begin_title.width = 300;
+        this.begin_title.anchorOffsetX = this.begin_title.width / 2;
+        this.begin_title.anchorOffsetY = this.begin_title.height / 2;
+        this.begin_title.x = this.stage.stageWidth / 2;
+        this.begin_title.y = this.stage.stageHeight * 0.2;
+        this.addChild(this.begin_title);
+        //开始游戏
+        this.startBtn = new StartBtn();
+        this.addChild(this.startBtn);
+        //底部
+        this.end_bg = new egret.Shape();
+        this.end_bg.graphics.beginFill(0x727378, 1);
+        this.end_bg.graphics.drawRect(0, 0, this.stage.stageWidth, 150);
+        this.end_bg.graphics.endFill();
+        this.end_bg.anchorOffsetY = this.end_bg.height;
+        this.end_bg.y = this.stage.stageHeight;
+        this.addChild(this.end_bg);
+        //排行榜查看按钮
+        this.btnRank = new RankBtn(RES.getRes(APP_RANK_VIEW));
+        //简单实现，打开这关闭使用一个按钮。
+        this.addChild(this.btnRank);
     };
     return StartingMain;
 }(egret.DisplayObjectContainer));
