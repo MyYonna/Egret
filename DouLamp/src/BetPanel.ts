@@ -1,6 +1,7 @@
 class BetPanel extends egret.DisplayObjectContainer{
     private bet_item_infos:BetItemInfo[] = [];
     private index:number;
+    public betItems:BetItem[] = [];
     public constructor(index:number){
         super();
         this.index = index;
@@ -13,7 +14,8 @@ class BetPanel extends egret.DisplayObjectContainer{
         this.width = this.bet_item_infos.length * (30 +3)+3;
         this.anchorOffsetX = this.width/2;
         this.x = this.parent.width/2;
-        this.y = 125+this.index * (this.height + 5);
+        let rightPanel = <RightPanel>this.parent;
+        this.y = rightPanel.credit.y+rightPanel.credit.height+this.index * (this.height + 5);
 
         let bet_bg = new egret.Shape();
         bet_bg.graphics.beginFill(0xffffff);
@@ -23,12 +25,32 @@ class BetPanel extends egret.DisplayObjectContainer{
         this.addChild(bet_bg);
 
         this.bet_item_infos.forEach((item,index)=>{
-             this.addChild(new BetItem(item));
+             let betItem = new BetItem(item);
+             this.addChild(betItem);
+             this.betItems.push(betItem);
+             betItem.bet_item_icon.addEventListener(egret.TouchEvent.TOUCH_TAP,this.addBet,this);
+
         })
 
 
     }
-
+    //点击图片，进行押注,1：押注数不能超过9,2：筹码区的金额不能低于0
+    private addBet(event:egret.TouchEvent){
+        let target:egret.Bitmap = event.currentTarget;
+        let betItem:BetItem = <BetItem>target.parent;
+        if(betItem.bet_num <9){
+            //改变筹码区的数值
+            let rightPanel:RightPanel = <RightPanel>this.parent;
+            if(rightPanel.credit.creditItem.credit_num>=1){
+                rightPanel.credit.creditItem.credit_num--;
+                rightPanel.credit.creditItem.credit_num_text.text = rightPanel.credit.creditItem.credit_num+""; 
+                bet_buffer++;
+                betItem.bet_num++;
+                betItem.bet_text_num.text =  betItem.bet_num +"";
+            }
+        }
+        
+    }
     private init(){
         if(this.index == 0){
 

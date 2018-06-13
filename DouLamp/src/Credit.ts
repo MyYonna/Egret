@@ -1,4 +1,6 @@
 class Credit extends egret.DisplayObjectContainer{
+    public creditItem:CreditItem;
+    public bonusWinItem:CreditItem;
     public constructor(){
         super();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.render, this);
@@ -30,14 +32,14 @@ class Credit extends egret.DisplayObjectContainer{
 
 
         //credit范围筹码
-        let credit =new CreditItem();
-        this.addChild(credit);
-        credit.anchorOffsetY = credit.height;
-        credit.y= (this.height/2)-15;
+        this.creditItem =new CreditItem(10);
+        this.addChild(this.creditItem);
+        this.creditItem.anchorOffsetY = this.creditItem.height;
+        this.creditItem.y= (this.height/2)-15;
         //bonus-win奖金
-        let bonus_win =new CreditItem();
-        this.addChild(bonus_win);
-        bonus_win.y= (this.height/2)+5;
+        this.bonusWinItem =new CreditItem(0);
+        this.addChild(this.bonusWinItem);
+        this.bonusWinItem.y= (this.height/2)+5;
         //说明
         let credit_text = new egret.TextField();
         credit_text.text = "CREDIT";
@@ -46,7 +48,7 @@ class Credit extends egret.DisplayObjectContainer{
         credit_text.height = 15;
         credit_text.textAlign = egret.HorizontalAlign.CENTER;
         credit_text.anchorOffsetY = credit_text.height;
-        credit_text.y = credit.y - credit.height-2;
+        credit_text.y = this.creditItem.y - this.creditItem.height-2;
         credit_text.size = 15;
         credit_text.textColor = 0xb63f1f;
         this.addChild(credit_text);
@@ -59,7 +61,7 @@ class Credit extends egret.DisplayObjectContainer{
         bonus_win_text.width = this.width;
         bonus_win_text.height = 15;
         bonus_win_text.textAlign = egret.HorizontalAlign.CENTER;
-        bonus_win_text.y = bonus_win.y + bonus_win.height+2;
+        bonus_win_text.y = this.bonusWinItem.y + this.bonusWinItem.height+2;
         bonus_win_text.size = 15;
         bonus_win_text.textColor = 0xb63f1f;
         this.addChild(bonus_win_text);
@@ -70,11 +72,33 @@ class Credit extends egret.DisplayObjectContainer{
         winToCredit.anchorOffsetX = winToCredit.width/2;
         winToCredit.anchorOffsetY = winToCredit.height/2;
         winToCredit.skewY = 180;
-        winToCredit.x = credit.x+credit.width/2+10;
+        winToCredit.x = this.creditItem.x+this.creditItem.width/2+10;
         winToCredit.y = this.height/2;
         this.addChild(winToCredit);
-        this.anchorOffsetX = this.width/2;
+        winToCredit.touchEnabled = true;
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_BEGIN,function(){
+            winToCredit.scaleX = 0.6;
+            winToCredit.scaleY = 0.6
+        },this)
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_END,function(){
+            winToCredit.scaleX = 0.5;
+            winToCredit.scaleY = 0.5;
+        },this)
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE,function(){
+            winToCredit.scaleX = 0.5;
+            winToCredit.scaleY = 0.5;
+        },this)
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_TAP,function(){
+            //计算，将奖金池的值与筹码区的值想加，值赋予筹码区，并置空奖金区的值
+            this.creditItem.credit_num = this.creditItem.credit_num+this.bonusWinItem.credit_num;
+            this.bonusWinItem.credit_num = 0;
+            //显示
+            this.creditItem.credit_num_text.text = this.creditItem.credit_num+"";
+            this.bonusWinItem.credit_num_text.text = this.bonusWinItem.credit_num +"";
 
+        },this)
+        this.anchorOffsetX = this.width/2;
+        this.y = 10;
         this.x = this.parent.width/2;
         
     }

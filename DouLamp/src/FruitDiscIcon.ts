@@ -37,6 +37,8 @@ class FruitDiscIcon extends egret.DisplayObjectContainer{
     }
 
     public giveVFX(){
+        this.scaleX = 1.1;
+        this.scaleY = 1.1;
         var color:number = 0xffffff;        /// 光晕的颜色，十六进制，不包含透明度
         var alpha:number = 0.8;             /// 光晕的颜色透明度，是对 color 参数的透明度设定。有效值为 0.0 到 1.0。例如，0.8 设置透明度值为 80%。
         var blurX:number = 35;              /// 水平模糊量。有效值为 0 到 255.0（浮点）
@@ -61,6 +63,8 @@ class FruitDiscIcon extends egret.DisplayObjectContainer{
     }
 
     public clearVFX(){
+        this.scaleX = 1;
+        this.scaleY = 1;
         this.icon.filters = [];
     }
 

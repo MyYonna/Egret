@@ -13,7 +13,6 @@ class FruitHistoryContent extends egret.ScrollView{
         this.width = this.parent.width;
         this.height = this.parent.height-this.parent.getChildAt(0).height;
         this.y = this.parent.getChildAt(0).height;
-
         this.listContainer.width = this.width;
    }
 

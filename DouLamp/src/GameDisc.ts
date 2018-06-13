@@ -10,13 +10,13 @@ class GameDisc extends egret.DisplayObjectContainer {
     public render() {
         this.height = this.stage.stageHeight * 0.9;
         this.width = this.height;
-        // this.anchorOffsetX = this.width / 2;
         this.anchorOffsetY = this.height / 2;
-        this.x = 30+35+30;
+        let main = <Main>this.parent;
+        this.x = main.history.x+main.history.width+10;
         this.y = this.stage.stageHeight / 2;
 
         let gameDiscShape = new egret.Shape();
-        gameDiscShape.graphics.beginFill(0x141414);
+        gameDiscShape.graphics.beginFill(0xf0f0f0);
         gameDiscShape.graphics.lineStyle(3, 0x262626);
         gameDiscShape.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
         gameDiscShape.graphics.endFill();
@@ -31,6 +31,7 @@ class GameDisc extends egret.DisplayObjectContainer {
                 this.addChild(fruitDiscIcon);
             }
         })
+        //圆盘中间内容
         let center = new egret.Bitmap(RES.getRes("bg_jpg"));
         center.height = this.height - (((this.height-32)/7+8) * 2);
         center.width = this.width - (((this.width-32)/7+8) * 2);

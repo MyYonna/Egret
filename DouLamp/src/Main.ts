@@ -26,6 +26,7 @@
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
+var bet_buffer:number = 0;
 const ICON_COLOR:number[] = [0x1194A8,0xD89A14,0X589120];
 const Fruit_Icons = ["Apple_png","Watermelon_png","Cocco_png","Seven_png","Chip_50_png","Chip_100_png","Banana_png","Lime_png","Arancia_png","Strawberry_png","Dice_png"]
 const Fruit_Bet = [5,20,30,40,50,100,20,15,10,2];
@@ -48,7 +49,9 @@ enum Fruit_ICON{
 class Main extends egret.DisplayObjectContainer {
 
 
-    private gameDisc:GameDisc;
+    public gameDisc:GameDisc;
+    public rightPanel:RightPanel;
+    public history:FruitHistory;
     public constructor() {
         super();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
@@ -113,20 +116,20 @@ class Main extends egret.DisplayObjectContainer {
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
         let bg = new egret.Shape();
-        bg.graphics.beginFill(0x141414);
+        bg.graphics.beginFill(0x1194a8);
         bg.graphics.drawRect(0,0,stageW,stageH);
         bg.graphics.endFill();
         this.addChild(bg);
 
-       let history = new FruitHistory();
-       this.addChild(history);
+       this.history = new FruitHistory();
+       this.addChild(this.history);
 
        this.gameDisc = new GameDisc();
        this.addChild(this.gameDisc);
 
-       let rightPanel = new RightPanel();
-       this.addChild(rightPanel);
-       rightPanel.start_btn.addEventListener(egret.TouchEvent.TOUCH_TAP,this.beginMarquee,this);
+       this.rightPanel = new RightPanel();
+       this.addChild(this.rightPanel);
+    
 
     }
 
@@ -140,61 +143,5 @@ class Main extends egret.DisplayObjectContainer {
         result.texture = texture;
         return result;
     }
-    private i=0;
-    private j=0;
 
-    private beginMarquee(){
-        this.j++;
-        let that = this;
-        this.i = this.i % 24;
-        let fruitDiscIcon = this.gameDisc.fruitDiscIcons[Fruit_Excute_Order[this.i]];
-        fruitDiscIcon.giveVFX();
-        fruitDiscIcon.scaleX = 1.1;
-        fruitDiscIcon.scaleY = 1.1;
-        if(this.j>650){
-            let sure_value = Math.round(Math.random()*650);
-            let fruit_res = this.weatherFruit(sure_value);
-            if(fruitDiscIcon.icon_res != fruit_res){
-            }else{
-                this.i = 0;
-                this.j = 0;
-                return;
-            }
-        }
-        setTimeout(function() {
-            fruitDiscIcon.scaleX = 1;
-            fruitDiscIcon.scaleY = 1;
-            fruitDiscIcon.clearVFX();
-            that.i ++;
-            that.beginMarquee();
-        }, 20);
-    }
-    //633
-    private weatherFruit(value:number):string{
-        let fruit;
-        if(value>(650-6)){
-            fruit = Fruit_Icons[Fruit_ICON.Chip_100];
-        }else if(value>(650-6-12)){
-            fruit = Fruit_Icons[Fruit_ICON.Chip_50];
-        }else if(value>(650-6-12-15)){
-            fruit = Fruit_Icons[Fruit_ICON.Seven];
-        }else if(value>(650-6-12-15-20)){
-            fruit = Fruit_Icons[Fruit_ICON.Cocco];
-        }else if(value>(650-6-12-15-20-30)){
-            fruit = Fruit_Icons[Fruit_ICON.Watermelon];
-        }else if(value>(650-6-12-15-20-30-120)){
-            fruit = Fruit_Icons[Fruit_ICON.Apple];
-        }else if(value>(650-6-12-15-20-30-120-300)){
-            fruit = Fruit_Icons[Fruit_ICON.Strawberry];
-        }else if(value>(650-6-12-15-20-30-120-300-60)){
-            fruit = Fruit_Icons[Fruit_ICON.Arancia];
-        }else if(value>(650-6-12-15-20-30-120-300-60-40)){
-            fruit = Fruit_Icons[Fruit_ICON.Lime];
-        }else if(value>(650-6-12-15-20-30-120-300-60-40-30)){
-            fruit = Fruit_Icons[Fruit_ICON.Banana];
-        }else{
-             fruit = Fruit_Icons[Fruit_ICON.Dice];
-        }
-        return fruit;
-    }
 }

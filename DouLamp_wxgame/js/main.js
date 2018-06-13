@@ -54,30 +54,22 @@ var FruitHistory = (function (_super) {
         this.height = this.stage.stageHeight * 0.9;
         this.width = 35;
         this.anchorOffsetY = this.height / 2;
-        this.x = 30;
+        this.x = 10;
         this.y = this.stage.stageHeight / 2;
-        // let historyShape = new egret.Shape();
-        // historyShape.graphics.beginFill(0x141414);
-        // historyShape.graphics.lineStyle(1, 0x262626);
-        // historyShape.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
-        // historyShape.graphics.endFill();
-        // this.addChild(historyShape);
         var history_header = new egret.Bitmap(RES.getRes("History_png"));
         history_header.width = 35;
         history_header.height = 35;
         this.addChild(history_header);
-        var history_content = new FruitHistoryContent();
-        this.addChild(history_content);
-        for (var i = 0; i < 20; i++) {
-            var history_item1 = new FruitHistoryItem();
-            history_content.addItem(history_item1);
-        }
-        var history_item2 = new FruitHistoryItem();
-        history_content.addItem(history_item2);
-        var history_item3 = new FruitHistoryItem();
-        history_content.addItem(history_item3);
-        var history_item4 = new FruitHistoryItem();
-        history_content.addItem(history_item4);
+        var shape = new egret.Shape();
+        shape.graphics.beginFill(0xf0f0f0, 0.8);
+        shape.graphics.drawRect(0, history_header.height, this.width, this.height - history_header.height);
+        shape.graphics.endFill();
+        this.addChild(shape);
+        this.history_content = new FruitHistoryContent();
+        this.addChild(this.history_content);
+    };
+    FruitHistory.prototype.addItem = function (item) {
+        this.history_content.addItem(item);
     };
     return FruitHistory;
 }(egret.DisplayObjectContainer));
@@ -97,26 +89,56 @@ var BetBtn = (function (_super) {
         btn_bg.graphics.drawRoundRect(0, 0, 80, 25, 20);
         btn_bg.graphics.endFill();
         this.addChild(btn_bg);
-        var text_bg = new egret.Shape();
-        text_bg.graphics.beginFill(0xFBFB0D);
-        text_bg.graphics.lineStyle(1, 0x135673);
-        text_bg.graphics.drawRoundRect(0, 0, 70, 20, 20);
-        text_bg.graphics.endFill();
-        text_bg.anchorOffsetX = text_bg.width / 2;
-        text_bg.anchorOffsetY = text_bg.height / 2;
-        text_bg.x = this.width / 2;
-        text_bg.y = this.height / 2;
-        this.addChild(text_bg);
-        var text = new egret.TextField();
-        text.text = this.text;
-        text.bold = true;
-        text.textColor = 0x000000;
-        text.size = text_bg.height - 10;
-        text.anchorOffsetX = text.width / 2;
-        text.anchorOffsetY = text.height / 2;
-        text.x = this.width / 2;
-        text.y = this.height / 2;
-        this.addChild(text);
+        this.text_bg = new egret.Shape();
+        this.text_bg.graphics.beginFill(0x242431);
+        this.text_bg.graphics.lineStyle(1, 0x135673);
+        this.text_bg.graphics.drawRoundRect(0, 0, 70, 20, 20);
+        this.text_bg.graphics.endFill();
+        this.text_bg.anchorOffsetX = this.text_bg.width / 2;
+        this.text_bg.anchorOffsetY = this.text_bg.height / 2;
+        this.text_bg.x = this.width / 2;
+        this.text_bg.y = this.height / 2;
+        this.addChild(this.text_bg);
+        this.text_field = new egret.TextField();
+        this.text_field.text = this.text;
+        this.text_field.bold = true;
+        this.text_field.textColor = 0xffffff;
+        this.text_field.size = this.text_bg.height - 10;
+        this.text_field.width = this.width;
+        this.text_field.height = this.height;
+        this.text_field.textAlign = egret.HorizontalAlign.CENTER;
+        this.text_field.verticalAlign = egret.VerticalAlign.MIDDLE;
+        this.addChild(this.text_field);
+        this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+            this.scaleX = 1.1;
+            this.scaleY = 1.1;
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, function () {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }, this);
+    };
+    BetBtn.prototype.disableBtn = function () {
+        this.touchEnabled = false;
+        this.text_bg.graphics.clear();
+        this.text_bg.graphics.beginFill(0x242431);
+        this.text_bg.graphics.lineStyle(1, 0x135673);
+        this.text_bg.graphics.drawRoundRect(0, 0, 70, 20, 20);
+        this.text_bg.graphics.endFill();
+        this.text_field.textColor = 0xffffff;
+    };
+    BetBtn.prototype.enableBtn = function () {
+        this.touchEnabled = true;
+        this.text_bg.graphics.clear();
+        this.text_bg.graphics.beginFill(0xFBFB0D);
+        this.text_bg.graphics.lineStyle(1, 0x135673);
+        this.text_bg.graphics.drawRoundRect(0, 0, 70, 20, 20);
+        this.text_bg.graphics.endFill();
+        this.text_field.textColor = 0x000000;
     };
     return BetBtn;
 }(egret.DisplayObjectContainer));
@@ -133,11 +155,85 @@ var BetItemInfo = (function () {
     return BetItemInfo;
 }());
 __reflect(BetItemInfo.prototype, "BetItemInfo");
+var BetOnBtn = (function (_super) {
+    __extends(BetOnBtn, _super);
+    function BetOnBtn(text) {
+        var _this = _super.call(this) || this;
+        _this.text = text;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
+    }
+    BetOnBtn.prototype.render = function () {
+        this.width = 30;
+        this.height = 30;
+        var btn_bg = new egret.Shape();
+        btn_bg.graphics.beginFill(0x1899B9);
+        btn_bg.graphics.lineStyle(1, 0x135673);
+        btn_bg.graphics.drawCircle(this.width / 2, this.height / 2, 15);
+        btn_bg.graphics.endFill();
+        this.addChild(btn_bg);
+        this.text_bg = new egret.Shape();
+        this.text_bg.graphics.beginFill(0xFBFB0D);
+        this.text_bg.graphics.lineStyle(1, 0x135673);
+        this.text_bg.graphics.drawCircle(this.width / 2, this.height / 2, 13);
+        this.text_bg.graphics.endFill();
+        this.addChild(this.text_bg);
+        this.text_field = new egret.TextField();
+        this.text_field.text = this.text;
+        this.text_field.textColor = 0x000000;
+        this.text_field.bold = true;
+        this.text_field.size = this.text_bg.height / 2 - 3;
+        this.text_field.width = this.width;
+        this.text_field.height = this.height;
+        this.text_field.textAlign = egret.HorizontalAlign.CENTER;
+        this.text_field.verticalAlign = egret.VerticalAlign.MIDDLE;
+        // this.text_field.anchorOffsetX = this.text_field.width/2;
+        // this.text_field.anchorOffsetY = this.text_field.height/2;
+        // this.text_field.x = this.width/2;
+        // this.text_field.y = this.height/2;
+        this.addChild(this.text_field);
+        this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+            this.scaleX = 1.1;
+            this.scaleY = 1.1;
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, function () {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }, this);
+    };
+    //按钮不可用
+    BetOnBtn.prototype.disableBtn = function () {
+        this.touchEnabled = false;
+        this.text_bg.graphics.clear();
+        this.text_bg.graphics.beginFill(0x242431);
+        this.text_bg.graphics.lineStyle(1, 0x135673);
+        this.text_bg.graphics.drawCircle(this.width / 2, this.height / 2, 13);
+        this.text_bg.graphics.endFill();
+        this.text_field.textColor = 0xffffff;
+    };
+    //按钮可用
+    BetOnBtn.prototype.enableBtn = function () {
+        this.touchEnabled = true;
+        this.text_bg.graphics.clear();
+        this.text_bg.graphics.beginFill(0xFBFB0D);
+        this.text_bg.graphics.lineStyle(1, 0x135673);
+        this.text_bg.graphics.drawCircle(this.width / 2, this.height / 2, 13);
+        this.text_bg.graphics.endFill();
+        this.text_field.textColor = 0x000000;
+    };
+    return BetOnBtn;
+}(egret.DisplayObjectContainer));
+__reflect(BetOnBtn.prototype, "BetOnBtn");
 var BetPanel = (function (_super) {
     __extends(BetPanel, _super);
     function BetPanel(index) {
         var _this = _super.call(this) || this;
         _this.bet_item_infos = [];
+        _this.betItems = [];
         _this.index = index;
         _this.init();
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
@@ -149,7 +245,8 @@ var BetPanel = (function (_super) {
         this.width = this.bet_item_infos.length * (30 + 3) + 3;
         this.anchorOffsetX = this.width / 2;
         this.x = this.parent.width / 2;
-        this.y = 125 + this.index * (this.height + 5);
+        var rightPanel = this.parent;
+        this.y = rightPanel.credit.y + rightPanel.credit.height + this.index * (this.height + 5);
         var bet_bg = new egret.Shape();
         bet_bg.graphics.beginFill(0xffffff);
         bet_bg.graphics.lineStyle(1, 0x121212);
@@ -157,8 +254,27 @@ var BetPanel = (function (_super) {
         bet_bg.graphics.endFill();
         this.addChild(bet_bg);
         this.bet_item_infos.forEach(function (item, index) {
-            _this.addChild(new BetItem(item));
+            var betItem = new BetItem(item);
+            _this.addChild(betItem);
+            _this.betItems.push(betItem);
+            betItem.bet_item_icon.addEventListener(egret.TouchEvent.TOUCH_TAP, _this.addBet, _this);
         });
+    };
+    //点击图片，进行押注,1：押注数不能超过9,2：筹码区的金额不能低于0
+    BetPanel.prototype.addBet = function (event) {
+        var target = event.currentTarget;
+        var betItem = target.parent;
+        if (betItem.bet_num < 9) {
+            //改变筹码区的数值
+            var rightPanel = this.parent;
+            if (rightPanel.credit.creditItem.credit_num >= 1) {
+                rightPanel.credit.creditItem.credit_num--;
+                rightPanel.credit.creditItem.credit_num_text.text = rightPanel.credit.creditItem.credit_num + "";
+                bet_buffer++;
+                betItem.bet_num++;
+                betItem.bet_text_num.text = betItem.bet_num + "";
+            }
+        }
     };
     BetPanel.prototype.init = function () {
         if (this.index == 0) {
@@ -211,14 +327,14 @@ var Credit = (function (_super) {
         money_icon.scaleY = 0.8;
         this.addChild(money_icon);
         //credit范围筹码
-        var credit = new CreditItem();
-        this.addChild(credit);
-        credit.anchorOffsetY = credit.height;
-        credit.y = (this.height / 2) - 15;
+        this.creditItem = new CreditItem(10);
+        this.addChild(this.creditItem);
+        this.creditItem.anchorOffsetY = this.creditItem.height;
+        this.creditItem.y = (this.height / 2) - 15;
         //bonus-win奖金
-        var bonus_win = new CreditItem();
-        this.addChild(bonus_win);
-        bonus_win.y = (this.height / 2) + 5;
+        this.bonusWinItem = new CreditItem(0);
+        this.addChild(this.bonusWinItem);
+        this.bonusWinItem.y = (this.height / 2) + 5;
         //说明
         var credit_text = new egret.TextField();
         credit_text.text = "CREDIT";
@@ -227,7 +343,7 @@ var Credit = (function (_super) {
         credit_text.height = 15;
         credit_text.textAlign = egret.HorizontalAlign.CENTER;
         credit_text.anchorOffsetY = credit_text.height;
-        credit_text.y = credit.y - credit.height - 2;
+        credit_text.y = this.creditItem.y - this.creditItem.height - 2;
         credit_text.size = 15;
         credit_text.textColor = 0xb63f1f;
         this.addChild(credit_text);
@@ -238,7 +354,7 @@ var Credit = (function (_super) {
         bonus_win_text.width = this.width;
         bonus_win_text.height = 15;
         bonus_win_text.textAlign = egret.HorizontalAlign.CENTER;
-        bonus_win_text.y = bonus_win.y + bonus_win.height + 2;
+        bonus_win_text.y = this.bonusWinItem.y + this.bonusWinItem.height + 2;
         bonus_win_text.size = 15;
         bonus_win_text.textColor = 0xb63f1f;
         this.addChild(bonus_win_text);
@@ -249,10 +365,32 @@ var Credit = (function (_super) {
         winToCredit.anchorOffsetX = winToCredit.width / 2;
         winToCredit.anchorOffsetY = winToCredit.height / 2;
         winToCredit.skewY = 180;
-        winToCredit.x = credit.x + credit.width / 2 + 10;
+        winToCredit.x = this.creditItem.x + this.creditItem.width / 2 + 10;
         winToCredit.y = this.height / 2;
         this.addChild(winToCredit);
+        winToCredit.touchEnabled = true;
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+            winToCredit.scaleX = 0.6;
+            winToCredit.scaleY = 0.6;
+        }, this);
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+            winToCredit.scaleX = 0.5;
+            winToCredit.scaleY = 0.5;
+        }, this);
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, function () {
+            winToCredit.scaleX = 0.5;
+            winToCredit.scaleY = 0.5;
+        }, this);
+        winToCredit.addEventListener(egret.TouchEvent.TOUCH_TAP, function () {
+            //计算，将奖金池的值与筹码区的值想加，值赋予筹码区，并置空奖金区的值
+            this.creditItem.credit_num = this.creditItem.credit_num + this.bonusWinItem.credit_num;
+            this.bonusWinItem.credit_num = 0;
+            //显示
+            this.creditItem.credit_num_text.text = this.creditItem.credit_num + "";
+            this.bonusWinItem.credit_num_text.text = this.bonusWinItem.credit_num + "";
+        }, this);
         this.anchorOffsetX = this.width / 2;
+        this.y = 10;
         this.x = this.parent.width / 2;
     };
     return Credit;
@@ -260,8 +398,9 @@ var Credit = (function (_super) {
 __reflect(Credit.prototype, "Credit");
 var CreditItem = (function (_super) {
     __extends(CreditItem, _super);
-    function CreditItem() {
+    function CreditItem(credit_num) {
         var _this = _super.call(this) || this;
+        _this.credit_num = credit_num;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
@@ -276,19 +415,19 @@ var CreditItem = (function (_super) {
         credit.graphics.drawRoundRect(0, 0, this.width, this.height, this.height);
         credit.graphics.endFill();
         this.addChild(credit);
-        var credit_num = new egret.TextField();
-        credit_num.text = "888888";
-        credit_num.height = this.height;
-        credit_num.width = this.width - this.height;
-        credit_num.anchorOffsetX = credit_num.width / 2;
-        credit_num.anchorOffsetY = credit_num.height / 2;
-        credit_num.x = this.width / 2;
-        credit_num.y = this.height / 2;
-        credit_num.size = this.height;
-        credit_num.textColor = 0xffffff;
-        credit_num.textAlign = egret.HorizontalAlign.CENTER;
-        credit_num.verticalAlign = egret.VerticalAlign.MIDDLE;
-        this.addChild(credit_num);
+        this.credit_num_text = new egret.TextField();
+        this.credit_num_text.text = this.credit_num + "";
+        this.credit_num_text.height = this.height;
+        this.credit_num_text.width = this.width - this.height;
+        this.credit_num_text.anchorOffsetX = this.credit_num_text.width / 2;
+        this.credit_num_text.anchorOffsetY = this.credit_num_text.height / 2;
+        this.credit_num_text.x = this.width / 2;
+        this.credit_num_text.y = this.height / 2;
+        this.credit_num_text.size = this.height;
+        this.credit_num_text.textColor = 0xffffff;
+        this.credit_num_text.textAlign = egret.HorizontalAlign.CENTER;
+        this.credit_num_text.verticalAlign = egret.VerticalAlign.MIDDLE;
+        this.addChild(this.credit_num_text);
     };
     return CreditItem;
 }(egret.DisplayObjectContainer));
@@ -327,6 +466,8 @@ var FruitDiscIcon = (function (_super) {
         this.addChild(this.icon);
     };
     FruitDiscIcon.prototype.giveVFX = function () {
+        this.scaleX = 1.1;
+        this.scaleY = 1.1;
         var color = 0xffffff; /// 光晕的颜色，十六进制，不包含透明度
         var alpha = 0.8; /// 光晕的颜色透明度，是对 color 参数的透明度设定。有效值为 0.0 到 1.0。例如，0.8 设置透明度值为 80%。
         var blurX = 35; /// 水平模糊量。有效值为 0 到 255.0（浮点）
@@ -347,6 +488,8 @@ var FruitDiscIcon = (function (_super) {
         this.icon.filters = [glowFilter, colorFlilter];
     };
     FruitDiscIcon.prototype.clearVFX = function () {
+        this.scaleX = 1;
+        this.scaleY = 1;
         this.icon.filters = [];
     };
     return FruitDiscIcon;
@@ -386,7 +529,7 @@ var BetItem = (function (_super) {
         this.addChild(bet_item_header);
         //头部文字
         var bet = new egret.TextField();
-        bet.text = this.turn_number + "";
+        bet.text = this.turn_number + ""; //翻倍数
         bet.textColor = 0x000000;
         bet.size = bet_item_header.height - 5;
         bet.width = this.width;
@@ -395,32 +538,68 @@ var BetItem = (function (_super) {
         bet.verticalAlign = egret.VerticalAlign.MIDDLE;
         this.addChild(bet);
         //中间图片
-        var bet_item_icon = new egret.Bitmap(RES.getRes(this.icon));
-        bet_item_icon.width = this.height * 0.3;
-        bet_item_icon.height = this.height * 0.3;
-        bet_item_icon.anchorOffsetX = bet_item_icon.width / 2;
-        bet_item_icon.x = this.width / 2;
-        bet_item_icon.y = bet_item_header.height;
-        this.addChild(bet_item_icon);
+        this.bet_item_icon = new egret.Bitmap(RES.getRes(this.icon));
+        this.bet_item_icon.width = this.height * 0.3;
+        this.bet_item_icon.height = this.height * 0.3;
+        this.bet_item_icon.anchorOffsetX = this.bet_item_icon.width / 2;
+        this.bet_item_icon.x = this.width / 2;
+        this.bet_item_icon.y = bet_item_header.height;
+        this.addChild(this.bet_item_icon);
+        this.bet_item_icon.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+            this.bet_item_icon.scaleX = 1.1;
+            this.bet_item_icon.scaleY = 1.1;
+        }, this);
+        this.bet_item_icon.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, function () {
+            this.bet_item_icon.scaleX = 1;
+            this.bet_item_icon.scaleY = 1;
+        }, this);
+        this.bet_item_icon.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+            this.bet_item_icon.scaleX = 1;
+            this.bet_item_icon.scaleY = 1;
+        }, this);
         //押注数背景
         var bet_item_footer = new egret.Shape();
         bet_item_footer.graphics.beginFill(this.footer_color);
         bet_item_footer.graphics.lineStyle(1, 0x121212);
         bet_item_footer.graphics.drawRoundRect(0, 0, this.width, this.height * 0.45, 1);
         bet_item_footer.graphics.endFill();
-        bet_item_footer.y = bet_item_icon.y + bet_item_icon.height;
+        bet_item_footer.y = this.bet_item_icon.y + this.bet_item_icon.height;
         this.addChild(bet_item_footer);
         //点击押注数量
-        var bet_num = new egret.TextField();
-        bet_num.text = this.bet_num + "";
-        bet_num.textColor = 0xffffff;
-        bet_num.size = bet_item_footer.width;
-        bet_num.width = this.width;
-        bet_num.height = bet_item_footer.height;
-        bet_num.y = bet_item_footer.y;
-        bet_num.textAlign = egret.HorizontalAlign.CENTER;
-        bet_num.verticalAlign = egret.VerticalAlign.MIDDLE;
-        this.addChild(bet_num);
+        this.bet_text_num = new egret.TextField();
+        this.bet_text_num.text = this.bet_num + "";
+        this.bet_text_num.textColor = 0xffffff;
+        this.bet_text_num.size = bet_item_footer.width;
+        this.bet_text_num.width = this.width;
+        this.bet_text_num.height = bet_item_footer.height;
+        this.bet_text_num.y = bet_item_footer.y;
+        this.bet_text_num.textAlign = egret.HorizontalAlign.CENTER;
+        this.bet_text_num.verticalAlign = egret.VerticalAlign.MIDDLE;
+        this.addChild(this.bet_text_num);
+    };
+    BetItem.prototype.giveVFX = function () {
+        var color = 0xED3200; /// 光晕的颜色，十六进制，不包含透明度
+        var alpha = 0.9; /// 光晕的颜色透明度，是对 color 参数的透明度设定。有效值为 0.0 到 1.0。例如，0.8 设置透明度值为 80%。
+        var blurX = 35; /// 水平模糊量。有效值为 0 到 255.0（浮点）
+        var blurY = 35; /// 垂直模糊量。有效值为 0 到 255.0（浮点）
+        var strength = 2; /// 压印的强度，值越大，压印的颜色越深，而且发光与背景之间的对比度也越强。有效值为 0 到 255。暂未实现
+        var quality = 3 /* HIGH */; /// 应用滤镜的次数，建议用 BitmapFilterQuality 类的常量来体现
+        var inner = false; /// 指定发光是否为内侧发光，暂未实现
+        var knockout = false; /// 指定对象是否具有挖空效果，暂未实现
+        var glowFilter = new egret.GlowFilter(color, alpha, blurX, blurY, strength, quality, inner, knockout);
+        //颜色矩阵数组
+        var colorMatrix = [
+            1, 0, 0, 0, 100,
+            0, 1, 0, 0, 100,
+            0, 0, 1, 0, 100,
+            0, 0, 0, 1, 0
+        ];
+        var colorFlilter = new egret.ColorMatrixFilter(colorMatrix);
+        this.filters = [glowFilter, colorFlilter];
+    };
+    //清空路径
+    BetItem.prototype.clearVFX = function () {
+        this.filters = [];
     };
     return BetItem;
 }(egret.DisplayObjectContainer));
@@ -448,8 +627,9 @@ var FruitHistoryContent = (function (_super) {
 __reflect(FruitHistoryContent.prototype, "FruitHistoryContent");
 var FruitHistoryItem = (function (_super) {
     __extends(FruitHistoryItem, _super);
-    function FruitHistoryItem() {
+    function FruitHistoryItem(icon) {
         var _this = _super.call(this) || this;
+        _this.icon = icon;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
@@ -458,12 +638,12 @@ var FruitHistoryItem = (function (_super) {
         this.height = this.width;
         this.y = (this.parent.numChildren - 1) * this.height;
         var item_bg = new egret.Shape();
-        item_bg.graphics.beginFill(0x292a2c);
+        item_bg.graphics.beginFill(0xf0f0f0);
         item_bg.graphics.lineStyle(1, 0x6b6565);
         item_bg.graphics.drawRoundRect(0, 0, this.width, this.height, 5);
         item_bg.graphics.endFill();
         this.addChild(item_bg);
-        var item_icon = new egret.Bitmap(RES.getRes("Arancia_png"));
+        var item_icon = new egret.Bitmap(RES.getRes(this.icon));
         item_icon.width = this.width - 4;
         item_icon.height = this.height - 4;
         item_icon.anchorOffsetX = item_icon.width / 2;
@@ -490,12 +670,12 @@ var GameDisc = (function (_super) {
         var _this = this;
         this.height = this.stage.stageHeight * 0.9;
         this.width = this.height;
-        // this.anchorOffsetX = this.width / 2;
         this.anchorOffsetY = this.height / 2;
-        this.x = 30 + 35 + 30;
+        var main = this.parent;
+        this.x = main.history.x + main.history.width + 10;
         this.y = this.stage.stageHeight / 2;
         var gameDiscShape = new egret.Shape();
-        gameDiscShape.graphics.beginFill(0x141414);
+        gameDiscShape.graphics.beginFill(0xf0f0f0);
         gameDiscShape.graphics.lineStyle(3, 0x262626);
         gameDiscShape.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
         gameDiscShape.graphics.endFill();
@@ -509,6 +689,7 @@ var GameDisc = (function (_super) {
                 _this.addChild(fruitDiscIcon);
             }
         });
+        //圆盘中间内容
         var center = new egret.Bitmap(RES.getRes("bg_jpg"));
         center.height = this.height - (((this.height - 32) / 7 + 8) * 2);
         center.width = this.width - (((this.width - 32) / 7 + 8) * 2);
@@ -639,6 +820,7 @@ __reflect(LoadingUI.prototype, "LoadingUI", ["RES.PromiseTaskReporter"]);
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
+var bet_buffer = 0;
 var ICON_COLOR = [0x1194A8, 0xD89A14, 0X589120];
 var Fruit_Icons = ["Apple_png", "Watermelon_png", "Cocco_png", "Seven_png", "Chip_50_png", "Chip_100_png", "Banana_png", "Lime_png", "Arancia_png", "Strawberry_png", "Dice_png"];
 var Fruit_Bet = [5, 20, 30, 40, 50, 100, 20, 15, 10, 2];
@@ -663,8 +845,6 @@ var Main = (function (_super) {
     __extends(Main, _super);
     function Main() {
         var _this = _super.call(this) || this;
-        _this.i = 0;
-        _this.j = 0;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.onAddToStage, _this);
         return _this;
     }
@@ -742,17 +922,16 @@ var Main = (function (_super) {
         var stageW = this.stage.stageWidth;
         var stageH = this.stage.stageHeight;
         var bg = new egret.Shape();
-        bg.graphics.beginFill(0x141414);
+        bg.graphics.beginFill(0x1194a8);
         bg.graphics.drawRect(0, 0, stageW, stageH);
         bg.graphics.endFill();
         this.addChild(bg);
-        var history = new FruitHistory();
-        this.addChild(history);
+        this.history = new FruitHistory();
+        this.addChild(this.history);
         this.gameDisc = new GameDisc();
         this.addChild(this.gameDisc);
-        var rightPanel = new RightPanel();
-        this.addChild(rightPanel);
-        rightPanel.start_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.beginMarquee, this);
+        this.rightPanel = new RightPanel();
+        this.addChild(this.rightPanel);
     };
     /**
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
@@ -763,71 +942,6 @@ var Main = (function (_super) {
         var texture = RES.getRes(name);
         result.texture = texture;
         return result;
-    };
-    Main.prototype.beginMarquee = function () {
-        this.j++;
-        var that = this;
-        this.i = this.i % 24;
-        var fruitDiscIcon = this.gameDisc.fruitDiscIcons[Fruit_Excute_Order[this.i]];
-        fruitDiscIcon.giveVFX();
-        fruitDiscIcon.scaleX = 1.1;
-        fruitDiscIcon.scaleY = 1.1;
-        if (this.j > 650) {
-            var sure_value = Math.round(Math.random() * 650);
-            var fruit_res = this.weatherFruit(sure_value);
-            if (fruitDiscIcon.icon_res != fruit_res) {
-            }
-            else {
-                this.i = 0;
-                this.j = 0;
-                return;
-            }
-        }
-        setTimeout(function () {
-            fruitDiscIcon.scaleX = 1;
-            fruitDiscIcon.scaleY = 1;
-            fruitDiscIcon.clearVFX();
-            that.i++;
-            that.beginMarquee();
-        }, 20);
-    };
-    //633
-    Main.prototype.weatherFruit = function (value) {
-        var fruit;
-        if (value > (650 - 6)) {
-            fruit = Fruit_Icons[Fruit_ICON.Chip_100];
-        }
-        else if (value > (650 - 6 - 12)) {
-            fruit = Fruit_Icons[Fruit_ICON.Chip_50];
-        }
-        else if (value > (650 - 6 - 12 - 15)) {
-            fruit = Fruit_Icons[Fruit_ICON.Seven];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20)) {
-            fruit = Fruit_Icons[Fruit_ICON.Cocco];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20 - 30)) {
-            fruit = Fruit_Icons[Fruit_ICON.Watermelon];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20 - 30 - 120)) {
-            fruit = Fruit_Icons[Fruit_ICON.Apple];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20 - 30 - 120 - 300)) {
-            fruit = Fruit_Icons[Fruit_ICON.Strawberry];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20 - 30 - 120 - 300 - 60)) {
-            fruit = Fruit_Icons[Fruit_ICON.Arancia];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20 - 30 - 120 - 300 - 60 - 40)) {
-            fruit = Fruit_Icons[Fruit_ICON.Lime];
-        }
-        else if (value > (650 - 6 - 12 - 15 - 20 - 30 - 120 - 300 - 60 - 40 - 30)) {
-            fruit = Fruit_Icons[Fruit_ICON.Banana];
-        }
-        else {
-            fruit = Fruit_Icons[Fruit_ICON.Dice];
-        }
-        return fruit;
     };
     return Main;
 }(egret.DisplayObjectContainer));
@@ -859,6 +973,8 @@ var RightPanel = (function (_super) {
     __extends(RightPanel, _super);
     function RightPanel() {
         var _this = _super.call(this) || this;
+        _this.i = 0;
+        _this.j = 0;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
@@ -875,17 +991,25 @@ var RightPanel = (function (_super) {
         right_panel_bg.graphics.drawRoundRect(0, 0, this.width, this.height, 5);
         right_panel_bg.graphics.endFill();
         this.addChild(right_panel_bg);
-        var credit = new Credit();
-        this.addChild(credit);
-        var betPanel = new BetPanel(0);
-        this.addChild(betPanel);
-        var betPanel2 = new BetPanel(1);
-        this.addChild(betPanel2);
+        this.credit = new Credit();
+        this.addChild(this.credit);
+        this.betPanel1 = new BetPanel(0);
+        this.addChild(this.betPanel1);
+        this.betPanel2 = new BetPanel(1);
+        this.addChild(this.betPanel2);
+        this.bet_on_btn = new BetOnBtn("押注");
+        this.addChild(this.bet_on_btn);
+        this.bet_on_btn.x = 15;
+        this.bet_on_btn.y = this.betPanel2.y + this.betPanel2.height + 2;
+        this.bet_on_btn.touchEnabled = true;
+        //押注按钮的监听事件
+        this.bet_on_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.beginBetOn, this);
         this.start_btn = new BetBtn("START");
         this.addChild(this.start_btn);
         this.start_btn.anchorOffsetX = this.start_btn.width / 2;
         this.start_btn.x = this.width / 2;
-        this.start_btn.y = betPanel2.y + betPanel2.height + 5;
+        this.start_btn.y = this.betPanel2.y + this.betPanel2.height + 5;
+        this.start_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.beginStart, this);
         var left_btn = new BetBtn("LEFT");
         this.addChild(left_btn);
         left_btn.anchorOffsetX = left_btn.width;
@@ -895,17 +1019,151 @@ var RightPanel = (function (_super) {
         this.addChild(right_btn);
         right_btn.x = this.width / 2 + 5;
         right_btn.y = this.start_btn.y + this.start_btn.height + 5;
-        this.start_btn.touchEnabled = true;
-        // this.start_btn.addEventListener(egret.TouchEvent.TOUCH_TAP,this.beginMarquee,this);
     };
-    RightPanel.prototype.beginMarquee = function (i) {
-        if (i === void 0) { i = 0; }
-        console.log(i);
-        // this.gameDisc.fruitDiscIcons[i].scaleX = 1.1;
-        // this.gameDisc.fruitDiscIcons[i].scaleY = 1.1;
+    //处理押注按钮：1：可点击图片效果 2：图片可点击 3：清空之前押注的筹码 4：还原筹码区的筹码数
+    RightPanel.prototype.beginBetOn = function () {
+        //开始押注
+        this.start_btn.enableBtn();
+        //清空之前押注的内容
+        this.betPanel1.betItems.concat(this.betPanel2.betItems).forEach(function (item, index) {
+            //图片可点击效果，放大图片
+            // item.bet_item_icon.scaleX = 1.1;
+            // item.bet_item_icon.scaleY = 1.1;
+            //置为可点击
+            item.bet_item_icon.touchEnabled = true;
+            //清空筹码
+            item.bet_num = 0;
+            item.bet_text_num.text = item.bet_num + "";
+            //清空滤镜
+            item.filters = [];
+        });
+        //还原筹码区的筹码
+        this.credit.creditItem.credit_num = this.credit.creditItem.credit_num + bet_buffer;
+        this.credit.creditItem.credit_num_text.text = this.credit.creditItem.credit_num + "";
+        //置空bet缓存
+        bet_buffer = 0;
+    };
+    //开始跑马灯
+    RightPanel.prototype.beginStart = function () {
+        //跑马灯过程中，将开始和押注按钮置为不可用,
+        this.start_btn.disableBtn();
+        this.bet_on_btn.disableBtn();
+        //并复原图片按钮的大小，也置为不可用
+        this.handleEndStart();
+        //置空bet缓存
+        bet_buffer = 0;
+        var sure_value = Math.round(Math.random() * 650);
+        var fruit_res = this.weatherFruit(sure_value);
+        //开始应用跑马灯
+        var count = 100 + Math.random() * 100;
+        this.marquee(fruit_res, count);
+    };
+    //跑马灯
+    RightPanel.prototype.marquee = function (fruit_res, count) {
+        this.j++;
+        var that = this;
+        this.i = this.i % 24;
+        var parent = this.parent;
+        var fruitDiscIcon = parent.gameDisc.fruitDiscIcons[Fruit_Excute_Order[this.i]];
+        fruitDiscIcon.giveVFX();
+        if (this.j > count) {
+            if (fruitDiscIcon.icon_res == fruit_res) {
+                this.i = 0;
+                this.j = 0;
+                this.handleSelectIcon(fruit_res);
+                parent.history.addItem(new FruitHistoryItem(fruit_res));
+                this.bet_on_btn.enableBtn(); //激活押注按钮
+                return;
+            }
+        }
+        //延迟调用
         setTimeout(function () {
-            this.beginMarquee(i++);
-        }, 1000);
+            fruitDiscIcon.clearVFX();
+            that.i++;
+            that.marquee(fruit_res, count);
+        }, 20);
+    };
+    RightPanel.prototype.randomNormalDistribution = function () {
+        var u = 0.0, v = 0.0, w = 0.0, c = 0.0;
+        do {
+            //获得两个（-1,1）的独立随机变量
+            u = Math.random() * 2 - 1.0;
+            v = Math.random() * 2 - 1.0;
+            w = u * u + v * v;
+        } while (w == 0.0 || w >= 1.0);
+        //这里就是 Box-Muller转换
+        c = Math.sqrt((-2 * Math.log(w)) / w);
+        //返回2个标准正态分布的随机数，封装进一个数组返回
+        //当然，因为这个函数运行较快，也可以扔掉一个
+        //return [u*c,v*c];
+        console.log(v * c);
+        return v * c;
+    };
+    //633判断为哪种水果
+    RightPanel.prototype.weatherFruit = function (value) {
+        var fruit;
+        if (value > (900 - 6)) {
+            fruit = Fruit_Icons[Fruit_ICON.Chip_100];
+        }
+        else if (value > (900 - 6 - 12)) {
+            fruit = Fruit_Icons[Fruit_ICON.Chip_50];
+        }
+        else if (value > (900 - 6 - 12 - 15)) {
+            fruit = Fruit_Icons[Fruit_ICON.Seven];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20)) {
+            fruit = Fruit_Icons[Fruit_ICON.Cocco];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20 - 30)) {
+            fruit = Fruit_Icons[Fruit_ICON.Watermelon];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20 - 30 - 120)) {
+            fruit = Fruit_Icons[Fruit_ICON.Apple];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20 - 30 - 120 - 300)) {
+            fruit = Fruit_Icons[Fruit_ICON.Strawberry];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20 - 30 - 120 - 300 - 60)) {
+            fruit = Fruit_Icons[Fruit_ICON.Arancia];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20 - 30 - 120 - 300 - 60 - 40)) {
+            fruit = Fruit_Icons[Fruit_ICON.Lime];
+        }
+        else if (value > (900 - 6 - 12 - 15 - 20 - 30 - 120 - 300 - 60 - 40 - 30)) {
+            fruit = Fruit_Icons[Fruit_ICON.Banana];
+        }
+        else {
+            fruit = Fruit_Icons[Fruit_ICON.Dice];
+        }
+        return fruit;
+    };
+    //处理跑马灯结束后对筹码以及奖金池的处理
+    RightPanel.prototype.handleSelectIcon = function (fruit_res) {
+        var _this = this;
+        //对押注进行计算
+        if (fruit_res == "Dice_png") {
+            this.start_btn.enableBtn();
+        }
+        else {
+            this.betPanel1.betItems.concat(this.betPanel2.betItems).forEach(function (item, index) {
+                if (item.icon == fruit_res) {
+                    item.giveVFX();
+                }
+                if (item.icon == fruit_res && item.bet_num != 0) {
+                    //说明押注成功。给予奖金,如果押注数是零，则不给于
+                    var bonus_win = item.turn_number * item.bet_num;
+                    //更新奖金池中的信息
+                    _this.credit.bonusWinItem.credit_num = _this.credit.bonusWinItem.credit_num + bonus_win;
+                    _this.credit.bonusWinItem.credit_num_text.text = _this.credit.bonusWinItem.credit_num + "";
+                }
+            });
+        }
+    };
+    //BetPanel对开始按钮的响应处理，将图片复原，并不可点击
+    RightPanel.prototype.handleEndStart = function () {
+        this.betPanel1.betItems.concat(this.betPanel2.betItems).forEach(function (item, index) {
+            item.bet_item_icon.touchEnabled = false;
+        });
     };
     return RightPanel;
 }(egret.DisplayObjectContainer));
