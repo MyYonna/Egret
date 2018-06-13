@@ -1,0 +1,100 @@
+{
+	"groups": [
+		{
+			"keys": "bg_jpg,egret_icon_png,description_json,Apple_png,Banana_png,Bar_png,Chip_50_png,Chip_100_png,Cocco_png,Dice_png,Strawberry_png,Watermelon_png,Seven_png,Arancia_png,Lime_png,History_png,Money_png,WinToCredit_png",
+			"name": "preload"
+		}
+	],
+	"resources": [
+		{
+			"name": "bg_jpg",
+			"type": "image",
+			"url": "assets/bg.jpg"
+		},
+		{
+			"name": "egret_icon_png",
+			"type": "image",
+			"url": "assets/egret_icon.png"
+		},
+		{
+			"name": "description_json",
+			"type": "json",
+			"url": "config/description.json"
+		},
+		{
+			"name": "Apple_png",
+			"type": "image",
+			"url": "assets/fruit/Apple.png"
+		},
+		{
+			"name": "Banana_png",
+			"type": "image",
+			"url": "assets/fruit/Banana.png"
+		},
+		{
+			"name": "Bar_png",
+			"type": "image",
+			"url": "assets/fruit/Bar.png"
+		},
+		{
+			"name": "Chip_50_png",
+			"type": "image",
+			"url": "assets/fruit/Chip_50.png"
+		},
+		{
+			"name": "Chip_100_png",
+			"type": "image",
+			"url": "assets/fruit/Chip_100.png"
+		},
+		{
+			"name": "Cocco_png",
+			"type": "image",
+			"url": "assets/fruit/Cocco.png"
+		},
+		{
+			"name": "Dice_png",
+			"type": "image",
+			"url": "assets/fruit/Dice.png"
+		},
+		{
+			"name": "Strawberry_png",
+			"type": "image",
+			"url": "assets/fruit/Strawberry.png"
+		},
+		{
+			"name": "Watermelon_png",
+			"type": "image",
+			"url": "assets/fruit/Watermelon.png"
+		},
+		{
+			"name": "Seven_png",
+			"type": "image",
+			"url": "assets/fruit/Seven.png"
+		},
+		{
+			"name": "Arancia_png",
+			"type": "image",
+			"url": "assets/fruit/Arancia.png"
+		},
+		{
+			"name": "Lime_png",
+			"type": "image",
+			"url": "assets/fruit/Lime.png"
+		},
+		{
+			"name": "History_png",
+			"type": "image",
+			"url": "assets/History.png"
+		},
+		{
+			"name": "Money_png",
+			"type": "image",
+			"url": "assets/Money.png"
+		},
+		{
+			"name": "WinToCredit_png",
+			"type": "image",
+			"url": "assets/WinToCredit.png"
+		}
+	]
+}
