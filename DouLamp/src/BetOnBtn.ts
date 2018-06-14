@@ -51,6 +51,7 @@ class BetOnBtn extends egret.DisplayObjectContainer{
             this.scaleX = 1;
             this.scaleY = 1;
         },this);
+        this.touchEnabled = true;
         
     }
     //按钮不可用

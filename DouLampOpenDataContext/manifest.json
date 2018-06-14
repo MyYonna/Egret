@@ -1,0 +1,17 @@
+{
+	"initial": [
+		"libs/modules/egret/egret.js",
+		"libs/modules/egret/egret.web.js",
+		"libs/modules/game/game.js",
+		"libs/modules/promise/promise.js"
+	],
+	"game": [
+		"bin-debug/Main.js",
+		"bin-debug/Rank.js",
+		"bin-debug/RankContent.js",
+		"bin-debug/RankHead.js",
+		"bin-debug/RankInfo.js",
+		"bin-debug/RankItem.js",
+		"bin-debug/RankTitle.js"
+	]
+}

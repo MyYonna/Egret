@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "bg_jpg,egret_icon_png,description_json,Apple_png,Banana_png,Bar_png,Chip_50_png,Chip_100_png,Cocco_png,Dice_png,Strawberry_png,Watermelon_png,Seven_png,Arancia_png,Lime_png,History_png,Money_png,WinToCredit_png",
+			"keys": "bg_jpg,egret_icon_png,description_json,Apple_png,Banana_png,Bar_png,Chip_50_png,Chip_100_png,Cocco_png,Dice_png,Strawberry_png,Watermelon_png,Seven_png,Arancia_png,Lime_png,History_png,Money_png,WinToCredit_png,Lantern_Lamp_Red_png,Lantern_Lamp_Yellow_png,Game_Rank_png,rank_back_png",
 			"name": "preload"
 		}
 	],
@@ -95,6 +95,26 @@
 			"name": "WinToCredit_png",
 			"type": "image",
 			"url": "assets/WinToCredit.png"
+		},
+		{
+			"name": "Lantern_Lamp_Red_png",
+			"type": "image",
+			"url": "assets/Lantern_Lamp_Red.png"
+		},
+		{
+			"name": "Lantern_Lamp_Yellow_png",
+			"type": "image",
+			"url": "assets/Lantern_Lamp_Yellow.png"
+		},
+		{
+			"name": "Game_Rank_png",
+			"type": "image",
+			"url": "assets/Game_Rank.png"
+		},
+		{
+			"name": "rank_back_png",
+			"type": "image",
+			"url": "assets/rank_back.png"
 		}
 	]
 }

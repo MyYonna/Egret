@@ -43,37 +43,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var FruitHistory = (function (_super) {
-    __extends(FruitHistory, _super);
-    function FruitHistory() {
+var FruitHistoryContent = (function (_super) {
+    __extends(FruitHistoryContent, _super);
+    function FruitHistoryContent() {
         var _this = _super.call(this) || this;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
-    FruitHistory.prototype.render = function () {
-        this.height = this.stage.stageHeight * 0.9;
-        this.width = 35;
-        this.anchorOffsetY = this.height / 2;
-        this.x = 10;
-        this.y = this.stage.stageHeight / 2;
-        var history_header = new egret.Bitmap(RES.getRes("History_png"));
-        history_header.width = 35;
-        history_header.height = 35;
-        this.addChild(history_header);
-        var shape = new egret.Shape();
-        shape.graphics.beginFill(0xf0f0f0, 0.8);
-        shape.graphics.drawRect(0, history_header.height, this.width, this.height - history_header.height);
-        shape.graphics.endFill();
-        this.addChild(shape);
-        this.history_content = new FruitHistoryContent();
-        this.addChild(this.history_content);
+    FruitHistoryContent.prototype.render = function () {
+        this.listContainer = new egret.DisplayObjectContainer();
+        this.setContent(this.listContainer);
+        this.width = this.parent.width;
+        this.height = this.parent.height - this.parent.getChildAt(0).height;
+        this.y = this.parent.getChildAt(0).height;
+        this.listContainer.width = this.width;
     };
-    FruitHistory.prototype.addItem = function (item) {
-        this.history_content.addItem(item);
+    FruitHistoryContent.prototype.addItem = function (item) {
+        this.listContainer.addChild(item);
     };
-    return FruitHistory;
-}(egret.DisplayObjectContainer));
-__reflect(FruitHistory.prototype, "FruitHistory");
+    return FruitHistoryContent;
+}(egret.ScrollView));
+__reflect(FruitHistoryContent.prototype, "FruitHistoryContent");
 var BetBtn = (function (_super) {
     __extends(BetBtn, _super);
     function BetBtn(text) {
@@ -166,18 +156,21 @@ var BetOnBtn = (function (_super) {
     BetOnBtn.prototype.render = function () {
         this.width = 30;
         this.height = 30;
+        //外圈圆
         var btn_bg = new egret.Shape();
         btn_bg.graphics.beginFill(0x1899B9);
         btn_bg.graphics.lineStyle(1, 0x135673);
         btn_bg.graphics.drawCircle(this.width / 2, this.height / 2, 15);
         btn_bg.graphics.endFill();
         this.addChild(btn_bg);
+        //内圈圆
         this.text_bg = new egret.Shape();
         this.text_bg.graphics.beginFill(0xFBFB0D);
         this.text_bg.graphics.lineStyle(1, 0x135673);
         this.text_bg.graphics.drawCircle(this.width / 2, this.height / 2, 13);
         this.text_bg.graphics.endFill();
         this.addChild(this.text_bg);
+        //控制字体位置和大小
         this.text_field = new egret.TextField();
         this.text_field.text = this.text;
         this.text_field.textColor = 0x000000;
@@ -187,10 +180,6 @@ var BetOnBtn = (function (_super) {
         this.text_field.height = this.height;
         this.text_field.textAlign = egret.HorizontalAlign.CENTER;
         this.text_field.verticalAlign = egret.VerticalAlign.MIDDLE;
-        // this.text_field.anchorOffsetX = this.text_field.width/2;
-        // this.text_field.anchorOffsetY = this.text_field.height/2;
-        // this.text_field.x = this.width/2;
-        // this.text_field.y = this.height/2;
         this.addChild(this.text_field);
         this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
             this.scaleX = 1.1;
@@ -204,6 +193,7 @@ var BetOnBtn = (function (_super) {
             this.scaleX = 1;
             this.scaleY = 1;
         }, this);
+        this.touchEnabled = true;
     };
     //按钮不可用
     BetOnBtn.prototype.disableBtn = function () {
@@ -327,7 +317,7 @@ var Credit = (function (_super) {
         money_icon.scaleY = 0.8;
         this.addChild(money_icon);
         //credit范围筹码
-        this.creditItem = new CreditItem(10);
+        this.creditItem = new CreditItem(200);
         this.addChild(this.creditItem);
         this.creditItem.anchorOffsetY = this.creditItem.height;
         this.creditItem.y = (this.height / 2) - 15;
@@ -495,6 +485,37 @@ var FruitDiscIcon = (function (_super) {
     return FruitDiscIcon;
 }(egret.DisplayObjectContainer));
 __reflect(FruitDiscIcon.prototype, "FruitDiscIcon");
+var FruitHistory = (function (_super) {
+    __extends(FruitHistory, _super);
+    function FruitHistory() {
+        var _this = _super.call(this) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
+    }
+    FruitHistory.prototype.render = function () {
+        this.height = this.stage.stageHeight - 20;
+        this.width = 35;
+        // this.anchorOffsetY = this.height / 2;
+        this.x = 10;
+        this.y = 10;
+        var history_header = new egret.Bitmap(RES.getRes("History_png"));
+        history_header.width = 35;
+        history_header.height = 35;
+        this.addChild(history_header);
+        var shape = new egret.Shape();
+        shape.graphics.beginFill(0xf0f0f0, 0.5);
+        shape.graphics.drawRect(0, history_header.height, this.width, this.height - history_header.height);
+        shape.graphics.endFill();
+        this.addChild(shape);
+        this.history_content = new FruitHistoryContent();
+        this.addChild(this.history_content);
+    };
+    FruitHistory.prototype.addItem = function (item) {
+        this.history_content.addItem(item);
+    };
+    return FruitHistory;
+}(egret.DisplayObjectContainer));
+__reflect(FruitHistory.prototype, "FruitHistory");
 var BetItem = (function (_super) {
     __extends(BetItem, _super);
     function BetItem(betItemInfo) {
@@ -604,27 +625,6 @@ var BetItem = (function (_super) {
     return BetItem;
 }(egret.DisplayObjectContainer));
 __reflect(BetItem.prototype, "BetItem");
-var FruitHistoryContent = (function (_super) {
-    __extends(FruitHistoryContent, _super);
-    function FruitHistoryContent() {
-        var _this = _super.call(this) || this;
-        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
-        return _this;
-    }
-    FruitHistoryContent.prototype.render = function () {
-        this.listContainer = new egret.DisplayObjectContainer();
-        this.setContent(this.listContainer);
-        this.width = this.parent.width;
-        this.height = this.parent.height - this.parent.getChildAt(0).height;
-        this.y = this.parent.getChildAt(0).height;
-        this.listContainer.width = this.width;
-    };
-    FruitHistoryContent.prototype.addItem = function (item) {
-        this.listContainer.addChild(item);
-    };
-    return FruitHistoryContent;
-}(egret.ScrollView));
-__reflect(FruitHistoryContent.prototype, "FruitHistoryContent");
 var FruitHistoryItem = (function (_super) {
     __extends(FruitHistoryItem, _super);
     function FruitHistoryItem(icon) {
@@ -675,7 +675,7 @@ var GameDisc = (function (_super) {
         this.x = main.history.x + main.history.width + 10;
         this.y = this.stage.stageHeight / 2;
         var gameDiscShape = new egret.Shape();
-        gameDiscShape.graphics.beginFill(0xf0f0f0);
+        gameDiscShape.graphics.beginFill(0xf0f0f0, 0);
         gameDiscShape.graphics.lineStyle(3, 0x262626);
         gameDiscShape.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
         gameDiscShape.graphics.endFill();
@@ -689,15 +689,9 @@ var GameDisc = (function (_super) {
                 _this.addChild(fruitDiscIcon);
             }
         });
-        //圆盘中间内容
-        var center = new egret.Bitmap(RES.getRes("bg_jpg"));
-        center.height = this.height - (((this.height - 32) / 7 + 8) * 2);
-        center.width = this.width - (((this.width - 32) / 7 + 8) * 2);
-        center.anchorOffsetX = center.width / 2;
-        center.anchorOffsetY = center.height / 2;
-        center.x = this.width / 2;
-        center.y = this.height / 2;
-        this.addChild(center);
+        // //圆盘中间内容
+        this.gameDiscCenter = new GameDiscCenter();
+        this.addChild(this.gameDiscCenter);
     };
     GameDisc.prototype.init = function () {
         this.icon_res.push("Arancia_png");
@@ -743,6 +737,93 @@ var GameDisc = (function (_super) {
     return GameDisc;
 }(egret.DisplayObjectContainer));
 __reflect(GameDisc.prototype, "GameDisc");
+var GameDiscCenter = (function (_super) {
+    __extends(GameDiscCenter, _super);
+    function GameDiscCenter() {
+        var _this = _super.call(this) || this;
+        _this.text_num = 0;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
+    }
+    GameDiscCenter.prototype.render = function () {
+        this.height = this.parent.height - (((this.parent.height - 32) / 7 + 8) * 2);
+        this.width = this.parent.width - (((this.parent.width - 32) / 7 + 8) * 2);
+        this.anchorOffsetX = this.width / 2;
+        this.anchorOffsetY = this.height / 2;
+        this.x = this.parent.width / 2;
+        this.y = this.parent.height / 2;
+        var center = new egret.Shape();
+        center.graphics.lineStyle(3, 0x262626);
+        center.graphics.drawRoundRect(0, 0, this.width, this.height, 10);
+        this.addChild(center);
+        this.lamp1_red = new egret.Bitmap(RES.getRes("Lantern_Lamp_Red_png"));
+        this.lamp1_red.anchorOffsetY = this.lamp1_red.height / 2;
+        this.lamp1_red.x = 10;
+        this.lamp1_red.y = this.height / 2;
+        this.addChild(this.lamp1_red);
+        this.lamp2_red = new egret.Bitmap(RES.getRes("Lantern_Lamp_Red_png"));
+        this.lamp2_red.anchorOffsetY = this.lamp2_red.height / 2;
+        this.lamp2_red.anchorOffsetX = this.lamp2_red.width;
+        this.lamp2_red.x = this.width - 10;
+        this.lamp2_red.y = this.height / 2;
+        this.addChild(this.lamp2_red);
+        this.lamp1_yellow = new egret.Bitmap(RES.getRes("Lantern_Lamp_Yellow_png"));
+        this.lamp1_yellow.anchorOffsetY = this.lamp1_yellow.height / 2;
+        this.lamp1_yellow.x = 10;
+        this.lamp1_yellow.y = this.height / 2;
+        this.addChild(this.lamp1_yellow);
+        this.lamp2_yellow = new egret.Bitmap(RES.getRes("Lantern_Lamp_Yellow_png"));
+        this.lamp2_yellow.anchorOffsetY = this.lamp2_yellow.height / 2;
+        this.lamp2_yellow.anchorOffsetX = this.lamp2_yellow.width;
+        this.lamp2_yellow.x = this.width - 10;
+        this.lamp2_yellow.y = this.height / 2;
+        this.addChild(this.lamp2_yellow);
+        var lr_bg = new egret.Shape();
+        lr_bg.graphics.beginFill(0x5D1D1D, 1);
+        lr_bg.graphics.lineStyle(1, 0x121212);
+        lr_bg.graphics.drawRect(0, 0, 30, 60);
+        lr_bg.graphics.endFill();
+        lr_bg.anchorOffsetX = lr_bg.width / 2;
+        lr_bg.anchorOffsetY = lr_bg.height / 2;
+        lr_bg.x = this.width / 2;
+        lr_bg.y = this.height / 2;
+        this.addChild(lr_bg);
+        this.text_field = new egret.TextField();
+        this.text_field.height = this.height;
+        this.text_field.width = this.width;
+        this.text_field.text = this.text_num + "";
+        this.text_field.size = lr_bg.width;
+        this.text_field.textAlign = egret.HorizontalAlign.CENTER;
+        this.text_field.verticalAlign = egret.VerticalAlign.MIDDLE;
+        this.text_field.textColor = 0xffffff;
+        this.addChild(this.text_field);
+    };
+    GameDiscCenter.prototype.produceRandomNum = function () {
+        var that = this;
+        this.random_interval = setInterval(function () {
+            that.text_num = Math.floor(Math.random() * 10);
+            that.text_field.text = that.text_num + "";
+        }, 200);
+    };
+    //停止产生随机数
+    GameDiscCenter.prototype.stopProduceRanom = function () {
+        clearInterval(this.random_interval);
+    };
+    //闪烁喜灯
+    GameDiscCenter.prototype.twinkleLamp = function () {
+        var that = this;
+        this.twinkle_interval = setInterval(function () {
+            that.swapChildren(that.lamp1_red, that.lamp1_yellow);
+            that.swapChildren(that.lamp2_red, that.lamp2_yellow);
+        }, 200);
+    };
+    //停止喜灯
+    GameDiscCenter.prototype.stopTwinkleLamp = function () {
+        clearInterval(this.twinkle_interval);
+    };
+    return GameDiscCenter;
+}(egret.DisplayObjectContainer));
+__reflect(GameDiscCenter.prototype, "GameDiscCenter");
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-present, Egret Technology.
@@ -827,6 +908,7 @@ var Fruit_Bet = [5, 20, 30, 40, 50, 100, 20, 15, 10, 2];
 var Fruit_Header_Color = [0xFB459A, 0x92E02A, 0x92E02A, 0x92E02A, 0xFB459A, 0xFB459A, 0x92E02A, 0x92E02A, 0x92E02A, 0xFB459A];
 var Fruit_Footer_Color = [0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d];
 var Fruit_Excute_Order = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 23, 22, 21, 20, 19, 18, 17, 15, 13, 11, 9, 7];
+var APP_RANK_BACK = "rank_back_png";
 var Fruit_ICON;
 (function (Fruit_ICON) {
     Fruit_ICON[Fruit_ICON["Apple"] = 0] = "Apple";
@@ -866,23 +948,20 @@ var Main = (function (_super) {
     };
     Main.prototype.runGame = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var result, userInfo;
+            var result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.loadResource()];
+                    case 0:
+                        this.checkUpdate();
+                        this.shareGame();
+                        this.obtainCreditFromCloud();
+                        return [4 /*yield*/, this.loadResource()];
                     case 1:
                         _a.sent();
                         this.createGameScene();
                         return [4 /*yield*/, RES.getResAsync("description_json")];
                     case 2:
                         result = _a.sent();
-                        return [4 /*yield*/, platform.login()];
-                    case 3:
-                        _a.sent();
-                        return [4 /*yield*/, platform.getUserInfo()];
-                    case 4:
-                        userInfo = _a.sent();
-                        console.log(userInfo);
                         return [2 /*return*/];
                 }
             });
@@ -921,11 +1000,15 @@ var Main = (function (_super) {
     Main.prototype.createGameScene = function () {
         var stageW = this.stage.stageWidth;
         var stageH = this.stage.stageHeight;
-        var bg = new egret.Shape();
-        bg.graphics.beginFill(0x1194a8);
-        bg.graphics.drawRect(0, 0, stageW, stageH);
-        bg.graphics.endFill();
-        this.addChild(bg);
+        // //圆盘中间内容
+        var center = new egret.Bitmap(RES.getRes("bg_jpg"));
+        center.height = stageH;
+        center.width = stageW;
+        center.anchorOffsetX = center.width / 2;
+        center.anchorOffsetY = center.height / 2;
+        center.x = stageW / 2;
+        center.y = stageH / 2;
+        this.addChild(center);
         this.history = new FruitHistory();
         this.addChild(this.history);
         this.gameDisc = new GameDisc();
@@ -942,6 +1025,49 @@ var Main = (function (_super) {
         var texture = RES.getRes(name);
         result.texture = texture;
         return result;
+    };
+    //冷启动更新游戏
+    Main.prototype.checkUpdate = function () {
+        if (typeof wx.getUpdateManager === 'function') {
+            var updateManager_1 = wx.getUpdateManager();
+            updateManager_1.onCheckForUpdate(function () {
+                // 请求完新版本信息的回调
+            });
+            updateManager_1.onUpdateReady(function () {
+                // 新的版本已经下载好，调用 applyUpdate 应用新版本并重启
+                updateManager_1.applyUpdate();
+            });
+            updateManager_1.onUpdateFailed(function () {
+                // 新的版本下载失败
+            });
+        }
+    };
+    Main.prototype.shareGame = function () {
+        //显示转发按钮
+        wx.showShareMenu({
+            withShareTicket: false,
+            success: function (res) { },
+            fail: function (res) { },
+            complete: function (res) { }
+        });
+        //配置转发信息
+        wx.onShareAppMessage(function () {
+            // 用户点击了“转发”按钮
+            return {
+                title: '犬夜叉之角色拼图',
+                desc: '日本战国时代，主要讲述的是初三女生日暮戈薇偶然通过自家神社的食骨之井穿越时空来到500年前的日本战国时代妖怪与人的混血半妖——犬夜叉，为寻找散落于各处的四魂之玉碎片而展开的冒险之旅',
+            };
+        });
+    };
+    Main.prototype.obtainCreditFromCloud = function () {
+        wx.getOpenDataContext().postMessage({
+            "obtain_score": true
+        });
+        wx.onMessage(function (data) {
+            if (data.is_self_score) {
+                console.log(data.score);
+            }
+        });
     };
     return Main;
 }(egret.DisplayObjectContainer));
@@ -969,12 +1095,91 @@ __reflect(DebugPlatform.prototype, "DebugPlatform", ["Platform"]);
 if (!window.platform) {
     window.platform = new DebugPlatform();
 }
+var RankBtn = (function (_super) {
+    __extends(RankBtn, _super);
+    function RankBtn(res) {
+        var _this = _super.call(this, RES.getRes(res)) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
+    }
+    RankBtn.prototype.render = function () {
+        var parent = this.parent;
+        this.anchorOffsetX = this.width;
+        this.x = parent.width - 15;
+        this.y = parent.betPanel2.y + parent.betPanel2.height + 2;
+        this.touchEnabled = true;
+        this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function () {
+            this.scaleX = 1.1;
+            this.scaleY = 1.1;
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_RELEASE_OUTSIDE, function () {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_END, function () {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }, this);
+    };
+    return RankBtn;
+}(egret.Bitmap));
+__reflect(RankBtn.prototype, "RankBtn");
+var RankUI = (function (_super) {
+    __extends(RankUI, _super);
+    function RankUI() {
+        var _this = _super.call(this) || this;
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
+        return _this;
+    }
+    RankUI.prototype.render = function () {
+        this.width = this.parent.width;
+        this.height = this.parent.height;
+        //处理遮罩，避免开放数据域事件影响主域。
+        this.rankingListMask = new egret.Shape();
+        this.rankingListMask.graphics.beginFill(0x686b72, 1);
+        this.rankingListMask.graphics.drawRect(0, 1, this.width, this.height);
+        this.rankingListMask.graphics.endFill();
+        this.rankingListMask.alpha = 0.7;
+        this.rankingListMask.touchEnabled = true;
+        this.addChild(this.rankingListMask);
+        // 将离屏的canvas生成图片，贴到主屏
+        var bitmapdata = new egret.BitmapData(window["sharedCanvas"]);
+        bitmapdata.$deleteSource = false;
+        var texture = new egret.Texture();
+        texture._setBitmapData(bitmapdata);
+        this.bitmap = new egret.Bitmap(texture);
+        this.bitmap.width = this.width;
+        this.bitmap.height = this.height;
+        this.bitmap.alpha = 0.8;
+        this.addChild(this.bitmap);
+        // 画一个返回的按钮
+        this.btnClose = new egret.Bitmap(RES.getRes(APP_RANK_BACK));
+        this.btnClose.height = 30;
+        this.btnClose.width = 30;
+        this.btnClose.anchorOffsetY = this.btnClose.height;
+        this.btnClose.x = 10;
+        this.btnClose.y = this.height - 10;
+        //简单实现，打开这关闭使用一个按钮。
+        this.addChild(this.btnClose);
+        this.btnClose.touchEnabled = true;
+        egret.startTick(function (timeStarmp) {
+            egret.WebGLUtils.deleteWebGLTexture(bitmapdata.webGLTexture);
+            bitmapdata.webGLTexture = null;
+            return false;
+        }, this);
+    };
+    return RankUI;
+}(egret.DisplayObjectContainer));
+__reflect(RankUI.prototype, "RankUI");
 var RightPanel = (function (_super) {
     __extends(RightPanel, _super);
     function RightPanel() {
         var _this = _super.call(this) || this;
+        _this.openDataContext = wx.getOpenDataContext();
         _this.i = 0;
         _this.j = 0;
+        //处理跑马灯结束后对筹码以及奖金池的处理
+        _this.bonus_win = 0;
         _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.render, _this);
         return _this;
     }
@@ -986,8 +1191,8 @@ var RightPanel = (function (_super) {
         this.y = this.stage.stageHeight / 2;
         this.x = this.stage.stageWidth;
         var right_panel_bg = new egret.Shape();
-        right_panel_bg.graphics.beginFill(0xf0f0f0);
-        right_panel_bg.graphics.lineStyle(2, 0x121212);
+        right_panel_bg.graphics.beginFill(0xf0f0f0, 0.0);
+        // right_panel_bg.graphics.lineStyle(2,0x121212);
         right_panel_bg.graphics.drawRoundRect(0, 0, this.width, this.height, 5);
         right_panel_bg.graphics.endFill();
         this.addChild(right_panel_bg);
@@ -997,38 +1202,47 @@ var RightPanel = (function (_super) {
         this.addChild(this.betPanel1);
         this.betPanel2 = new BetPanel(1);
         this.addChild(this.betPanel2);
-        this.bet_on_btn = new BetOnBtn("押注");
+        this.bet_on_btn = new BetOnBtn("BET");
         this.addChild(this.bet_on_btn);
         this.bet_on_btn.x = 15;
         this.bet_on_btn.y = this.betPanel2.y + this.betPanel2.height + 2;
-        this.bet_on_btn.touchEnabled = true;
         //押注按钮的监听事件
         this.bet_on_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.beginBetOn, this);
+        this.rankBtn = new RankBtn("Game_Rank_png");
+        this.addChild(this.rankBtn);
+        //排行按钮的监听事件
+        this.rankBtn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.createScoreRank, this);
         this.start_btn = new BetBtn("START");
         this.addChild(this.start_btn);
         this.start_btn.anchorOffsetX = this.start_btn.width / 2;
         this.start_btn.x = this.width / 2;
         this.start_btn.y = this.betPanel2.y + this.betPanel2.height + 5;
         this.start_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.beginStart, this);
-        var left_btn = new BetBtn("LEFT");
-        this.addChild(left_btn);
-        left_btn.anchorOffsetX = left_btn.width;
-        left_btn.x = this.width / 2 - 5;
-        left_btn.y = this.start_btn.y + this.start_btn.height + 5;
-        var right_btn = new BetBtn("RIGHT");
-        this.addChild(right_btn);
-        right_btn.x = this.width / 2 + 5;
-        right_btn.y = this.start_btn.y + this.start_btn.height + 5;
+        this.left_btn = new BetBtn("LEFT");
+        this.addChild(this.left_btn);
+        this.left_btn.anchorOffsetX = this.left_btn.width;
+        this.left_btn.x = this.width / 2 - 5;
+        this.left_btn.y = this.start_btn.y + this.start_btn.height + 5;
+        this.left_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.ifLittle, this);
+        this.right_btn = new BetBtn("RIGHT");
+        this.addChild(this.right_btn);
+        this.right_btn.x = this.width / 2 + 5;
+        this.right_btn.y = this.start_btn.y + this.start_btn.height + 5;
+        this.right_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.ifGreat, this);
     };
     //处理押注按钮：1：可点击图片效果 2：图片可点击 3：清空之前押注的筹码 4：还原筹码区的筹码数
     RightPanel.prototype.beginBetOn = function () {
-        //开始押注
+        //开始押注1:开始按钮可用 2：左右按钮不可用 3：游戏盘复原 4：停止闪烁
         this.start_btn.enableBtn();
+        this.left_btn.disableBtn();
+        this.right_btn.disableBtn();
+        var parent = this.parent;
+        parent.gameDisc.gameDiscCenter.stopProduceRanom();
+        parent.gameDisc.gameDiscCenter.stopTwinkleLamp();
+        parent.gameDisc.gameDiscCenter.render();
         //清空之前押注的内容
         this.betPanel1.betItems.concat(this.betPanel2.betItems).forEach(function (item, index) {
             //图片可点击效果，放大图片
-            // item.bet_item_icon.scaleX = 1.1;
-            // item.bet_item_icon.scaleY = 1.1;
             //置为可点击
             item.bet_item_icon.touchEnabled = true;
             //清空筹码
@@ -1042,6 +1256,8 @@ var RightPanel = (function (_super) {
         this.credit.creditItem.credit_num_text.text = this.credit.creditItem.credit_num + "";
         //置空bet缓存
         bet_buffer = 0;
+        //置空奖金
+        this.bonus_win = 0;
     };
     //开始跑马灯
     RightPanel.prototype.beginStart = function () {
@@ -1057,6 +1273,50 @@ var RightPanel = (function (_super) {
         //开始应用跑马灯
         var count = 100 + Math.random() * 100;
         this.marquee(fruit_res, count);
+    };
+    //判断是否小
+    RightPanel.prototype.ifLittle = function () {
+        var parent = this.parent;
+        this.left_btn.disableBtn();
+        this.right_btn.disableBtn();
+        parent.gameDisc.gameDiscCenter.stopProduceRanom();
+        parent.gameDisc.gameDiscCenter.stopTwinkleLamp();
+        parent.gameDisc.gameDiscCenter.render();
+        var num = parent.gameDisc.gameDiscCenter.text_num;
+        if (num <= 4) {
+            //判定成功，分数翻倍
+            //更新奖金池中的信息
+            this.credit.bonusWinItem.credit_num = this.credit.bonusWinItem.credit_num + this.bonus_win;
+            this.credit.bonusWinItem.credit_num_text.text = this.credit.bonusWinItem.credit_num + "";
+        }
+        else {
+            this.credit.bonusWinItem.credit_num = this.credit.bonusWinItem.credit_num - this.bonus_win;
+            this.credit.bonusWinItem.credit_num_text.text = this.credit.bonusWinItem.credit_num + "";
+        }
+        //更新排行榜
+        this.sendScoreToOpenContext();
+    };
+    //判断是否大
+    RightPanel.prototype.ifGreat = function () {
+        var parent = this.parent;
+        this.left_btn.disableBtn();
+        this.right_btn.disableBtn();
+        parent.gameDisc.gameDiscCenter.stopProduceRanom();
+        parent.gameDisc.gameDiscCenter.stopTwinkleLamp();
+        parent.gameDisc.gameDiscCenter.render();
+        var num = parent.gameDisc.gameDiscCenter.text_num;
+        if (num > 4) {
+            //判定成功，分数翻倍
+            //更新奖金池中的信息
+            this.credit.bonusWinItem.credit_num = this.credit.bonusWinItem.credit_num + this.bonus_win;
+            this.credit.bonusWinItem.credit_num_text.text = this.credit.bonusWinItem.credit_num + "";
+        }
+        else {
+            this.credit.bonusWinItem.credit_num = this.credit.bonusWinItem.credit_num - this.bonus_win;
+            this.credit.bonusWinItem.credit_num_text.text = this.credit.bonusWinItem.credit_num + "";
+        }
+        //更新排行榜
+        this.sendScoreToOpenContext();
     };
     //跑马灯
     RightPanel.prototype.marquee = function (fruit_res, count) {
@@ -1082,22 +1342,6 @@ var RightPanel = (function (_super) {
             that.i++;
             that.marquee(fruit_res, count);
         }, 20);
-    };
-    RightPanel.prototype.randomNormalDistribution = function () {
-        var u = 0.0, v = 0.0, w = 0.0, c = 0.0;
-        do {
-            //获得两个（-1,1）的独立随机变量
-            u = Math.random() * 2 - 1.0;
-            v = Math.random() * 2 - 1.0;
-            w = u * u + v * v;
-        } while (w == 0.0 || w >= 1.0);
-        //这里就是 Box-Muller转换
-        c = Math.sqrt((-2 * Math.log(w)) / w);
-        //返回2个标准正态分布的随机数，封装进一个数组返回
-        //当然，因为这个函数运行较快，也可以扔掉一个
-        //return [u*c,v*c];
-        console.log(v * c);
-        return v * c;
     };
     //633判断为哪种水果
     RightPanel.prototype.weatherFruit = function (value) {
@@ -1137,7 +1381,6 @@ var RightPanel = (function (_super) {
         }
         return fruit;
     };
-    //处理跑马灯结束后对筹码以及奖金池的处理
     RightPanel.prototype.handleSelectIcon = function (fruit_res) {
         var _this = this;
         //对押注进行计算
@@ -1151,18 +1394,135 @@ var RightPanel = (function (_super) {
                 }
                 if (item.icon == fruit_res && item.bet_num != 0) {
                     //说明押注成功。给予奖金,如果押注数是零，则不给于
-                    var bonus_win = item.turn_number * item.bet_num;
+                    _this.bonus_win = item.turn_number * item.bet_num;
                     //更新奖金池中的信息
-                    _this.credit.bonusWinItem.credit_num = _this.credit.bonusWinItem.credit_num + bonus_win;
+                    _this.credit.bonusWinItem.credit_num = _this.credit.bonusWinItem.credit_num + _this.bonus_win;
                     _this.credit.bonusWinItem.credit_num_text.text = _this.credit.bonusWinItem.credit_num + "";
+                    var parent_1 = _this.parent;
+                    //押注成功则进行翻倍判断1：红灯闪烁 2：产生随机数 3：左右按钮可用
+                    parent_1.gameDisc.gameDiscCenter.produceRandomNum();
+                    parent_1.gameDisc.gameDiscCenter.twinkleLamp();
+                    _this.left_btn.enableBtn();
+                    _this.right_btn.enableBtn();
                 }
             });
+            //更新排行榜
+            this.sendScoreToOpenContext();
         }
     };
     //BetPanel对开始按钮的响应处理，将图片复原，并不可点击
     RightPanel.prototype.handleEndStart = function () {
         this.betPanel1.betItems.concat(this.betPanel2.betItems).forEach(function (item, index) {
             item.bet_item_icon.touchEnabled = false;
+        });
+    };
+    //发送更新排行榜的信息
+    RightPanel.prototype.sendScoreToOpenContext = function () {
+        var _this = this;
+        wx.checkSession({
+            success: function (res) {
+                console.log(res, "success");
+                _this.openDataContext.postMessage({
+                    update_score: true,
+                    openid: _this.openid,
+                    score: _this.credit.bonusWinItem.credit_num + _this.credit.creditItem.credit_num
+                });
+            },
+            fail: function (res) {
+                console.log(res, "fail");
+                _this.login();
+                _this.openDataContext.postMessage({
+                    update_score: true,
+                    openid: _this.openid,
+                    score: _this.credit.bonusWinItem.credit_num + _this.credit.creditItem.credit_num
+                });
+            },
+            complete: function (res) {
+                console.log(res);
+            }
+        });
+    };
+    //创建排名
+    RightPanel.prototype.createScoreRank = function () {
+        var _this = this;
+        if (this.isdisplay) {
+            this.removeChildAt(this.numChildren - 1);
+            this.isdisplay = false;
+        }
+        else {
+            wx.checkSession({
+                success: function (res) {
+                    console.log(res, "success");
+                    //开放数据
+                    _this.rankUi = new RankUI();
+                    _this.addChild(_this.rankUi);
+                    _this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+                        this.isdisplay = true;
+                        this.createScoreRank();
+                    }, _this);
+                    _this.isdisplay = true;
+                    //发送消息
+                    _this.openDataContext.postMessage({
+                        isDisplay: _this.isdisplay,
+                        openid: _this.openid
+                    });
+                },
+                fail: function (res) {
+                    console.log(res, "fail");
+                    _this.login();
+                    _this.rankUi = new RankUI();
+                    _this.addChild(_this.rankUi);
+                    _this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+                        this.isdisplay = true;
+                        this.createScoreRank();
+                    }, _this);
+                    _this.isdisplay = true;
+                    //发送消息
+                    _this.openDataContext.postMessage({
+                        isDisplay: _this.isdisplay,
+                        openid: _this.openid
+                    });
+                },
+                complete: function (res) {
+                    console.log(res);
+                }
+            });
+        }
+    };
+    //如果失效，则登录
+    RightPanel.prototype.login = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var loginInfo, request, params;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, platform.login()];
+                    case 1:
+                        loginInfo = _a.sent();
+                        request = new egret.HttpRequest();
+                        request.responseType = egret.HttpResponseType.TEXT;
+                        params = "?code=" + loginInfo.code;
+                        request.open("http://flow.go.gionee.com/wx/checkLogin.json" + params, egret.HttpMethod.GET);
+                        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        request.send();
+                        request.addEventListener(egret.Event.COMPLETE, function (event) {
+                            var request = event.currentTarget;
+                            var response = JSON.parse(request.response);
+                            if (response.errcode) {
+                                this.openid = "";
+                            }
+                            else {
+                                this.openid = response.openid;
+                            }
+                        }, this);
+                        request.addEventListener(egret.IOErrorEvent.IO_ERROR, function () {
+                            this.openid = "";
+                        }, this);
+                        request.addEventListener(egret.ProgressEvent.PROGRESS, function () {
+                            this.openid = "";
+                        }, this);
+                        return [2 /*return*/];
+                }
+            });
         });
     };
     return RightPanel;

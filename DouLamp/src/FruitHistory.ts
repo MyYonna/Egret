@@ -6,11 +6,11 @@ class FruitHistory extends egret.DisplayObjectContainer{
     }
 
     public render(){
-        this.height = this.stage.stageHeight*0.9;
+        this.height = this.stage.stageHeight-20;
         this.width = 35;
-        this.anchorOffsetY = this.height / 2;
+        // this.anchorOffsetY = this.height / 2;
         this.x = 10;
-        this.y = this.stage.stageHeight / 2;
+        this.y = 10;
 
         let history_header = new egret.Bitmap(RES.getRes("History_png"));
         history_header.width = 35;
@@ -18,7 +18,7 @@ class FruitHistory extends egret.DisplayObjectContainer{
         this.addChild(history_header);
 
         let shape = new egret.Shape();
-        shape.graphics.beginFill(0xf0f0f0,0.8);
+        shape.graphics.beginFill(0xf0f0f0,0.5);
         shape.graphics.drawRect(0,history_header.height,this.width,this.height -  history_header.height)
         shape.graphics.endFill();
         this.addChild(shape);

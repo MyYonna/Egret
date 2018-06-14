@@ -32,7 +32,8 @@ const Fruit_Icons = ["Apple_png","Watermelon_png","Cocco_png","Seven_png","Chip_
 const Fruit_Bet = [5,20,30,40,50,100,20,15,10,2];
 const Fruit_Header_Color = [0xFB459A,0x92E02A,0x92E02A,0x92E02A,0xFB459A,0xFB459A,0x92E02A,0x92E02A,0x92E02A,0xFB459A];
 const Fruit_Footer_Color = [0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d]
-const Fruit_Excute_Order = [0,1,2,3,4,5,6,8,10,12,14,16,23,22,21,20,19,18,17,15,13,11,9,7]
+const Fruit_Excute_Order = [0,1,2,3,4,5,6,8,10,12,14,16,23,22,21,20,19,18,17,15,13,11,9,7];
+const APP_RANK_BACK = "rank_back_png";
 enum Fruit_ICON{
     Apple,
     Watermelon,
@@ -84,13 +85,12 @@ class Main extends egret.DisplayObjectContainer {
     }
 
     private async runGame() {
+        this.checkUpdate();
+        this.shareGame();
+        this.obtainCreditFromCloud();
         await this.loadResource()
         this.createGameScene();
-        const result = await RES.getResAsync("description_json")
-        await platform.login();
-        const userInfo = await platform.getUserInfo();
-        console.log(userInfo);
-
+        const result = await RES.getResAsync("description_json");
     }
 
     private async loadResource() {
@@ -106,7 +106,6 @@ class Main extends egret.DisplayObjectContainer {
         }
     }
 
-    private textfield: egret.TextField;
 
     /**
      * 创建游戏场景
@@ -115,11 +114,16 @@ class Main extends egret.DisplayObjectContainer {
     private createGameScene() {
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
-        let bg = new egret.Shape();
-        bg.graphics.beginFill(0x1194a8);
-        bg.graphics.drawRect(0,0,stageW,stageH);
-        bg.graphics.endFill();
-        this.addChild(bg);
+
+        // //圆盘中间内容
+        let center = new egret.Bitmap(RES.getRes("bg_jpg"));
+        center.height = stageH;
+        center.width = stageW;
+        center.anchorOffsetX = center.width / 2;
+        center.anchorOffsetY = center.height / 2;
+        center.x = stageW / 2;
+        center.y = stageH / 2;
+        this.addChild(center);
 
        this.history = new FruitHistory();
        this.addChild(this.history);
@@ -142,6 +146,54 @@ class Main extends egret.DisplayObjectContainer {
         let texture: egret.Texture = RES.getRes(name);
         result.texture = texture;
         return result;
+    }
+        //冷启动更新游戏
+    private checkUpdate(){
+        if (typeof wx.getUpdateManager === 'function') {
+        const updateManager = wx.getUpdateManager()
+
+        updateManager.onCheckForUpdate(function() {
+            // 请求完新版本信息的回调
+        })
+
+        updateManager.onUpdateReady(function () {
+            // 新的版本已经下载好，调用 applyUpdate 应用新版本并重启
+            updateManager.applyUpdate()
+        })
+
+        updateManager.onUpdateFailed(function () {
+            // 新的版本下载失败
+        })
+        }
+    }
+
+    private shareGame(){
+        //显示转发按钮
+        wx.showShareMenu({
+            withShareTicket:false,
+            success:res=>{},
+            fail:res=>{},
+            complete:res=>{}
+            })
+        //配置转发信息
+        wx.onShareAppMessage(function () {
+        // 用户点击了“转发”按钮
+        return {
+                title: '犬夜叉之角色拼图',
+                desc: '日本战国时代，主要讲述的是初三女生日暮戈薇偶然通过自家神社的食骨之井穿越时空来到500年前的日本战国时代妖怪与人的混血半妖——犬夜叉，为寻找散落于各处的四魂之玉碎片而展开的冒险之旅',
+        }
+        })
+    }
+
+    private obtainCreditFromCloud(){
+         wx.getOpenDataContext().postMessage({
+             "obtain_score":true
+         })
+         wx.onMessage(data => {
+             if(data.is_self_score){
+                 console.log(data.score)
+             }
+         });
     }
 
 }

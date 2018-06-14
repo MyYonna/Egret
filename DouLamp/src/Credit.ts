@@ -32,10 +32,12 @@ class Credit extends egret.DisplayObjectContainer{
 
 
         //credit范围筹码
-        this.creditItem =new CreditItem(10);
+        this.creditItem =new CreditItem(200);
         this.addChild(this.creditItem);
         this.creditItem.anchorOffsetY = this.creditItem.height;
         this.creditItem.y= (this.height/2)-15;
+
+
         //bonus-win奖金
         this.bonusWinItem =new CreditItem(0);
         this.addChild(this.bonusWinItem);
