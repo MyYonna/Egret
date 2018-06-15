@@ -40,8 +40,8 @@ class RankItem extends egret.DisplayObjectContainer {
             let imageLoader = <egret.ImageLoader>event.currentTarget;
             bgtexture._setBitmapData(imageLoader.data);
             let bitmap = new egret.Bitmap(bgtexture);
-            bitmap.width = rank.height;
-            bitmap.height = rank.height;
+            bitmap.width = rank.height-5;
+            bitmap.height = rank.height-5;
             bitmap.x = 70;
             bitmap.anchorOffsetY = bitmap.height >> 1;
             bitmap.y = 15;

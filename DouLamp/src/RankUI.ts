@@ -35,7 +35,7 @@ class RankUI extends egret.DisplayObjectContainer{
         this.btnClose.width = 30;
         this.btnClose.anchorOffsetY = this.btnClose.height;
         this.btnClose.x = 10;
-        this.btnClose.y = this.height-10;
+        this.btnClose.y = this.height-2;
         //简单实现，打开这关闭使用一个按钮。
         this.addChild(this.btnClose);
         this.btnClose.touchEnabled = true;

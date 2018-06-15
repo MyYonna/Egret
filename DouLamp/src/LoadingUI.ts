@@ -31,18 +31,28 @@ class LoadingUI extends egret.Sprite implements RES.PromiseTaskReporter {
 
     public constructor() {
         super();
-        this.createView();
+        this.addEventListener(egret.Event.ADDED_TO_STAGE, this.createView, this);
     }
 
     private textField: egret.TextField;
+    private bgShape:egret.Shape;
 
     private createView(): void {
+        this.bgShape = new egret.Shape();
+        this.bgShape.graphics.beginFill(0xf0f0f0,1);
+        this.bgShape.graphics.drawRect(0,0,this.stage.stageWidth,this.stage.stageHeight);
+        this.bgShape.graphics.endFill();
+        this.addChild(this.bgShape);
+
         this.textField = new egret.TextField();
         this.addChild(this.textField);
-        this.textField.y = 300;
-        this.textField.width = 480;
-        this.textField.height = 100;
-        this.textField.textAlign = "center";
+
+        this.textField.size = 20
+        this.textField.width = this.stage.stageWidth;
+        this.textField.height = this.stage.stageHeight;
+        this.textField.textColor = 0x0f0f0f;
+        this.textField.textAlign = egret.HorizontalAlign.CENTER;
+        this.textField.verticalAlign = egret.VerticalAlign.MIDDLE;
     }
 
     public onProgress(current: number, total: number): void {

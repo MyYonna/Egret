@@ -15,7 +15,6 @@ var Main = (function (_super) {
         _this.gameData = []; //排行榜数据
         wx.onMessage(function (data) {
             var that = _this;
-            console.log(data);
             if (data.isDisplay) {
                 _this.openid = data.openid;
                 wx.getFriendCloudStorage({
@@ -46,25 +45,24 @@ var Main = (function (_super) {
                 var station = {
                     "score": data.score
                 };
-                wx.getUserCloudStorage({ keyList: ["dou_lamp_rank_socre"], success: function (res) {
-                        wx.setUserCloudStorage({
-                            KVDataList: [{ key: "dou_lamp_rank_socre", value: JSON.stringify(station) }], success: function (res) {
-                                console.log(res);
-                            }, fail: function (err) {
-                                console.log(err);
-                            }, complete: function () {
-                            }
-                        });
-                    }, fail: function (res) { }, complete: function (res) { } });
+                wx.setUserCloudStorage({
+                    KVDataList: [{ key: "dou_lamp_rank_socre", value: JSON.stringify(station) }], success: function (res) {
+                        console.log(res);
+                    }, fail: function (err) {
+                        console.log(err);
+                    }, complete: function () {
+                    }
+                });
             }
             if (data.obtain_score) {
                 wx.getUserCloudStorage({ keyList: ["dou_lamp_rank_socre"], success: function (res) {
-                        var kvDataList = res.KVDataList;
-                        console.log(kvDataList);
+                        _this.kvDataList = res.KVDataList;
+                        // console.log(kvDataList)
                         // if(Object.keys(kvDataList).length>0){
                         //     kvDataList.forEach((item,index)=>{
                         //         var value = JSON.parse(item.value);
-                        //         wx.getOpenDataContext().postMessage({
+                        //         wx.
+                        //         wx.postMessage({
                         //             is_self_score:true,
                         //             score:value.score
                         //         })
@@ -128,7 +126,7 @@ var Rank = (function (_super) {
         this.height = this.stage.stageHeight * 0.8;
         this.anchorOffsetX = this.width >> 1;
         this.x = this.stage.stageWidth >> 1;
-        this.y = 10;
+        this.y = 5;
         //为滚动视图添加背景色
         this.background = new egret.Shape();
         this.background.graphics.beginFill(0x363636, 1);
@@ -245,8 +243,8 @@ var RankItem = (function (_super) {
             var imageLoader = event.currentTarget;
             bgtexture._setBitmapData(imageLoader.data);
             var bitmap = new egret.Bitmap(bgtexture);
-            bitmap.width = rank.height;
-            bitmap.height = rank.height;
+            bitmap.width = rank.height - 5;
+            bitmap.height = rank.height - 5;
             bitmap.x = 70;
             bitmap.anchorOffsetY = bitmap.height >> 1;
             bitmap.y = 15;

@@ -1,12 +1,12 @@
 class Main extends egret.DisplayObjectContainer {
     private openid:string;
     private gameData: RankInfo[] = [];//排行榜数据
+    private kvDataList;
     constructor() {
         super();
         
         wx.onMessage(data => {
             var that = this;
-            console.log(data)
             if (data.isDisplay) {
                 this.openid = data.openid;
                      wx.getFriendCloudStorage({
@@ -37,33 +37,32 @@ class Main extends egret.DisplayObjectContainer {
                 var station = {
                     "score": data.score
                 };
-                wx.getUserCloudStorage({keyList:["dou_lamp_rank_socre"],success:res=>{
-                    wx.setUserCloudStorage({
-                        KVDataList: [{ key: "dou_lamp_rank_socre", value: JSON.stringify(station) }], success: res => {
-                            console.log(res)
-                        }, fail: err => {
-                            console.log(err)
-                        }, complete: () => {
-                        }
-                    });
-                },fail:res=>{},complete:res=>{}});
-
+                wx.setUserCloudStorage({
+                    KVDataList: [{ key: "dou_lamp_rank_socre", value: JSON.stringify(station) }], success: res => {
+                        console.log(res)
+                    }, fail: err => {
+                        console.log(err)
+                    }, complete: () => {
+                    }
+                });
 
             }
 
             if(data.obtain_score){
                     wx.getUserCloudStorage({ keyList:["dou_lamp_rank_socre"],success:res=>{
-                        let kvDataList = res.KVDataList;
-                        console.log(kvDataList)
+                        this.kvDataList = res.KVDataList;
+                        // console.log(kvDataList)
                         // if(Object.keys(kvDataList).length>0){
                         //     kvDataList.forEach((item,index)=>{
                         //         var value = JSON.parse(item.value);
-                        //         wx.getOpenDataContext().postMessage({
+                        //         wx.
+                        //         wx.postMessage({
                         //             is_self_score:true,
                         //             score:value.score
                         //         })
                         //     })
                         // }
+                        
                     },fail:res=>{},complete:res=>{}});
             }
         

@@ -74,6 +74,8 @@ class RightPanel extends egret.DisplayObjectContainer{
         this.right_btn.y = this.start_btn.y+this.start_btn.height+5;
         this.right_btn.addEventListener(egret.TouchEvent.TOUCH_TAP,this.ifGreat,this);
 
+        this.login1();
+
     }
     //处理押注按钮：1：可点击图片效果 2：图片可点击 3：清空之前押注的筹码 4：还原筹码区的筹码数
     private beginBetOn(){
@@ -258,28 +260,17 @@ class RightPanel extends egret.DisplayObjectContainer{
     }
     //发送更新排行榜的信息
     private sendScoreToOpenContext(){
-        wx.checkSession({
-            success:res=>{
-                console.log(res,"success");
-                this.openDataContext.postMessage({
-                    update_score: true,
-                    openid:this.openid ,
-                    score:this.credit.bonusWinItem.credit_num +this.credit.creditItem.credit_num
-                });
-            },
-            fail:res=>{
-                console.log(res,"fail");
-                this.login();
-                this.openDataContext.postMessage({
-                    update_score: true,
-                    openid:this.openid ,
-                    score:this.credit.bonusWinItem.credit_num +this.credit.creditItem.credit_num
-                });
-            },
-            complete:res=>{
-                console.log(res);
-            }
-        })
+        wx.setStorage({
+                key:"dou_lamp_rank_score",
+                data:this.credit.bonusWinItem.credit_num +this.credit.creditItem.credit_num+"",
+                success:res=>{},
+                fail:res=>{},
+                complete:res=>{}
+        });
+        this.openDataContext.postMessage({
+            update_score: true,
+            score:this.credit.bonusWinItem.credit_num +this.credit.creditItem.credit_num
+        });
     }
     //创建排名
     private createScoreRank(){
@@ -287,72 +278,84 @@ class RightPanel extends egret.DisplayObjectContainer{
                 this.removeChildAt(this.numChildren-1);
                 this.isdisplay = false;
             } else {
-                wx.checkSession({
-                    success:res=>{
-                        console.log(res,"success");
-                        //开放数据
-                        this.rankUi = new RankUI();
-                        this.addChild(this.rankUi);
-                        this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
-                            this.isdisplay = true;
-                            this.createScoreRank();
-                        },this);     
-                        this.isdisplay = true;
-                        //发送消息
-                        this.openDataContext.postMessage({
-                            isDisplay: this.isdisplay,
-                            openid:this.openid 
-                        });
-                        
-                    },
-                    fail:res=>{
-                        console.log(res,"fail");
-                        this.login();
-                        this.rankUi = new RankUI();
-                        this.addChild(this.rankUi);
-                        this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
-                            this.isdisplay = true;
-                            this.createScoreRank();
-                        },this);     
-                        this.isdisplay = true;
-                        //发送消息
-                        this.openDataContext.postMessage({
-                            isDisplay: this.isdisplay,
-                            openid:this.openid 
-                        });
-                    },
-                    complete:res=>{
-                        console.log(res);
-                    }
+                this.checkSession().then(()=>{
+                    this.createScoreRankUI();
+                }).catch(()=>{
+                    this.login();
                 })
             }
 
     }
+    //异步封装检查sessioni失效
+    private async  checkSession(){
+        return new Promise((resolve,reject)=>{
+                wx.checkSession({
+                    success:res=>{
+                        resolve();
+                    },
+                    fail:res=>{
+                        reject
+                    },
+                    complete:res=>{
+                    }
+                })
+        })
+    }
+    //创建排行榜视图
+    private createScoreRankUI(){
+        this.rankUi = new RankUI();
+        this.addChild(this.rankUi);
+        this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent){
+            this.isdisplay = true;
+            this.createScoreRank();
+        },this);     
+        this.isdisplay = true;
+        //发送消息
+        this.openDataContext.postMessage({
+            isDisplay: this.isdisplay,
+            openid:this.openid 
+        });
+    }
     //如果失效，则登录
     private async login(){
         const loginInfo =  await platform.login();
-        var request = new egret.HttpRequest();
-        request.responseType = egret.HttpResponseType.TEXT;
-        //设置为 POST 请求
-        var params = "?code="+loginInfo.code;
-        request.open("http://flow.go.gionee.com/wx/checkLogin.json"+params,egret.HttpMethod.GET);
-        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        request.send();
-        request.addEventListener(egret.Event.COMPLETE,function(event:egret.Event){
-            var request = <egret.HttpRequest>event.currentTarget;
-            let response = JSON.parse(request.response);
-            if(response.errcode){
-                this.openid = "";
-            }else{
-                this.openid = response.openid;
-            }
-
-        },this);
-        request.addEventListener(egret.IOErrorEvent.IO_ERROR,function(){
-             this.openid = "";
-        },this);
-        request.addEventListener(egret.ProgressEvent.PROGRESS,function(){
-             this.openid = "";
-        },this);
+        this.openId(loginInfo.code).then(()=>{
+            this.createScoreRankUI();
+        });
     }
+    //进入应用后进行登录
+    private async login1(){
+        const loginInfo =  await platform.login();
+        await this.openId(loginInfo.code);
+    }
+    //根据登录信息获取openid
+    private openId(code){
+        return new Promise((resolve,reject)=>{
+            var request = new egret.HttpRequest();
+            request.responseType = egret.HttpResponseType.TEXT;
+            //设置为 POST 请求
+            var params = "?code="+code;
+            request.open(APP_OPEN_ID_URL+params,egret.HttpMethod.GET);
+            request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.send();
+            request.addEventListener(egret.Event.COMPLETE,function(event:egret.Event){
+                var request = <egret.HttpRequest>event.currentTarget;
+                let response = JSON.parse(request.response);
+                if(response.errcode){
+                    this.openid = "";
+                }else{
+                    this.openid = response.openid;
+                }
+                resolve();
+
+            },this);
+            request.addEventListener(egret.IOErrorEvent.IO_ERROR,function(event:egret.Event){
+                this.openid = "";
+            },this);
+            request.addEventListener(egret.ProgressEvent.PROGRESS,function(){
+                this.openid = "";
+            },this);
+        })
+    }
+
 }

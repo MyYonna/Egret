@@ -316,8 +316,11 @@ var Credit = (function (_super) {
         money_icon.scaleX = 0.8;
         money_icon.scaleY = 0.8;
         this.addChild(money_icon);
+        var that = this;
         //credit范围筹码
-        this.creditItem = new CreditItem(200);
+        var score = wx.getStorageSync("dou_lamp_rank_score");
+        console.log(score);
+        this.creditItem = new CreditItem(parseInt(score == "" ? "200" : score, 0));
         this.addChild(this.creditItem);
         this.creditItem.anchorOffsetY = this.creditItem.height;
         this.creditItem.y = (this.height / 2) - 15;
@@ -856,16 +859,23 @@ var LoadingUI = (function (_super) {
     __extends(LoadingUI, _super);
     function LoadingUI() {
         var _this = _super.call(this) || this;
-        _this.createView();
+        _this.addEventListener(egret.Event.ADDED_TO_STAGE, _this.createView, _this);
         return _this;
     }
     LoadingUI.prototype.createView = function () {
+        this.bgShape = new egret.Shape();
+        this.bgShape.graphics.beginFill(0xf0f0f0, 1);
+        this.bgShape.graphics.drawRect(0, 0, this.stage.stageWidth, this.stage.stageHeight);
+        this.bgShape.graphics.endFill();
+        this.addChild(this.bgShape);
         this.textField = new egret.TextField();
         this.addChild(this.textField);
-        this.textField.y = 300;
-        this.textField.width = 480;
-        this.textField.height = 100;
-        this.textField.textAlign = "center";
+        this.textField.size = 20;
+        this.textField.width = this.stage.stageWidth;
+        this.textField.height = this.stage.stageHeight;
+        this.textField.textColor = 0x0f0f0f;
+        this.textField.textAlign = egret.HorizontalAlign.CENTER;
+        this.textField.verticalAlign = egret.VerticalAlign.MIDDLE;
     };
     LoadingUI.prototype.onProgress = function (current, total) {
         this.textField.text = "Loading..." + current + "/" + total;
@@ -909,6 +919,7 @@ var Fruit_Header_Color = [0xFB459A, 0x92E02A, 0x92E02A, 0x92E02A, 0xFB459A, 0xFB
 var Fruit_Footer_Color = [0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d, 0x5d1d1d];
 var Fruit_Excute_Order = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 23, 22, 21, 20, 19, 18, 17, 15, 13, 11, 9, 7];
 var APP_RANK_BACK = "rank_back_png";
+var APP_OPEN_ID_URL = "http://flow.go.gionee.com/wx/checkLogin.json";
 var Fruit_ICON;
 (function (Fruit_ICON) {
     Fruit_ICON[Fruit_ICON["Apple"] = 0] = "Apple";
@@ -954,7 +965,6 @@ var Main = (function (_super) {
                     case 0:
                         this.checkUpdate();
                         this.shareGame();
-                        this.obtainCreditFromCloud();
                         return [4 /*yield*/, this.loadResource()];
                     case 1:
                         _a.sent();
@@ -1059,16 +1069,6 @@ var Main = (function (_super) {
             };
         });
     };
-    Main.prototype.obtainCreditFromCloud = function () {
-        wx.getOpenDataContext().postMessage({
-            "obtain_score": true
-        });
-        wx.onMessage(function (data) {
-            if (data.is_self_score) {
-                console.log(data.score);
-            }
-        });
-    };
     return Main;
 }(egret.DisplayObjectContainer));
 __reflect(Main.prototype, "Main");
@@ -1158,7 +1158,7 @@ var RankUI = (function (_super) {
         this.btnClose.width = 30;
         this.btnClose.anchorOffsetY = this.btnClose.height;
         this.btnClose.x = 10;
-        this.btnClose.y = this.height - 10;
+        this.btnClose.y = this.height - 2;
         //简单实现，打开这关闭使用一个按钮。
         this.addChild(this.btnClose);
         this.btnClose.touchEnabled = true;
@@ -1229,6 +1229,7 @@ var RightPanel = (function (_super) {
         this.right_btn.x = this.width / 2 + 5;
         this.right_btn.y = this.start_btn.y + this.start_btn.height + 5;
         this.right_btn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.ifGreat, this);
+        this.login1();
     };
     //处理押注按钮：1：可点击图片效果 2：图片可点击 3：清空之前押注的筹码 4：还原筹码区的筹码数
     RightPanel.prototype.beginBetOn = function () {
@@ -1418,28 +1419,16 @@ var RightPanel = (function (_super) {
     };
     //发送更新排行榜的信息
     RightPanel.prototype.sendScoreToOpenContext = function () {
-        var _this = this;
-        wx.checkSession({
-            success: function (res) {
-                console.log(res, "success");
-                _this.openDataContext.postMessage({
-                    update_score: true,
-                    openid: _this.openid,
-                    score: _this.credit.bonusWinItem.credit_num + _this.credit.creditItem.credit_num
-                });
-            },
-            fail: function (res) {
-                console.log(res, "fail");
-                _this.login();
-                _this.openDataContext.postMessage({
-                    update_score: true,
-                    openid: _this.openid,
-                    score: _this.credit.bonusWinItem.credit_num + _this.credit.creditItem.credit_num
-                });
-            },
-            complete: function (res) {
-                console.log(res);
-            }
+        wx.setStorage({
+            key: "dou_lamp_rank_score",
+            data: this.credit.bonusWinItem.credit_num + this.credit.creditItem.credit_num + "",
+            success: function (res) { },
+            fail: function (res) { },
+            complete: function (res) { }
+        });
+        this.openDataContext.postMessage({
+            update_score: true,
+            score: this.credit.bonusWinItem.credit_num + this.credit.creditItem.credit_num
         });
     };
     //创建排名
@@ -1450,79 +1439,110 @@ var RightPanel = (function (_super) {
             this.isdisplay = false;
         }
         else {
-            wx.checkSession({
-                success: function (res) {
-                    console.log(res, "success");
-                    //开放数据
-                    _this.rankUi = new RankUI();
-                    _this.addChild(_this.rankUi);
-                    _this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
-                        this.isdisplay = true;
-                        this.createScoreRank();
-                    }, _this);
-                    _this.isdisplay = true;
-                    //发送消息
-                    _this.openDataContext.postMessage({
-                        isDisplay: _this.isdisplay,
-                        openid: _this.openid
-                    });
-                },
-                fail: function (res) {
-                    console.log(res, "fail");
-                    _this.login();
-                    _this.rankUi = new RankUI();
-                    _this.addChild(_this.rankUi);
-                    _this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
-                        this.isdisplay = true;
-                        this.createScoreRank();
-                    }, _this);
-                    _this.isdisplay = true;
-                    //发送消息
-                    _this.openDataContext.postMessage({
-                        isDisplay: _this.isdisplay,
-                        openid: _this.openid
-                    });
-                },
-                complete: function (res) {
-                    console.log(res);
-                }
+            this.checkSession().then(function () {
+                _this.createScoreRankUI();
+            }).catch(function () {
+                _this.login();
             });
         }
+    };
+    //异步封装检查sessioni失效
+    RightPanel.prototype.checkSession = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        wx.checkSession({
+                            success: function (res) {
+                                resolve();
+                            },
+                            fail: function (res) {
+                                reject;
+                            },
+                            complete: function (res) {
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    //创建排行榜视图
+    RightPanel.prototype.createScoreRankUI = function () {
+        this.rankUi = new RankUI();
+        this.addChild(this.rankUi);
+        this.rankUi.btnClose.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
+            this.isdisplay = true;
+            this.createScoreRank();
+        }, this);
+        this.isdisplay = true;
+        //发送消息
+        this.openDataContext.postMessage({
+            isDisplay: this.isdisplay,
+            openid: this.openid
+        });
     };
     //如果失效，则登录
     RightPanel.prototype.login = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var loginInfo, request, params;
+            var _this = this;
+            var loginInfo;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, platform.login()];
                     case 1:
                         loginInfo = _a.sent();
-                        request = new egret.HttpRequest();
-                        request.responseType = egret.HttpResponseType.TEXT;
-                        params = "?code=" + loginInfo.code;
-                        request.open("http://flow.go.gionee.com/wx/checkLogin.json" + params, egret.HttpMethod.GET);
-                        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                        request.send();
-                        request.addEventListener(egret.Event.COMPLETE, function (event) {
-                            var request = event.currentTarget;
-                            var response = JSON.parse(request.response);
-                            if (response.errcode) {
-                                this.openid = "";
-                            }
-                            else {
-                                this.openid = response.openid;
-                            }
-                        }, this);
-                        request.addEventListener(egret.IOErrorEvent.IO_ERROR, function () {
-                            this.openid = "";
-                        }, this);
-                        request.addEventListener(egret.ProgressEvent.PROGRESS, function () {
-                            this.openid = "";
-                        }, this);
+                        this.openId(loginInfo.code).then(function () {
+                            _this.createScoreRankUI();
+                        });
                         return [2 /*return*/];
                 }
             });
+        });
+    };
+    //进入应用后进行登录
+    RightPanel.prototype.login1 = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var loginInfo;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, platform.login()];
+                    case 1:
+                        loginInfo = _a.sent();
+                        return [4 /*yield*/, this.openId(loginInfo.code)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    //根据登录信息获取openid
+    RightPanel.prototype.openId = function (code) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var request = new egret.HttpRequest();
+            request.responseType = egret.HttpResponseType.TEXT;
+            //设置为 POST 请求
+            var params = "?code=" + code;
+            request.open(APP_OPEN_ID_URL + params, egret.HttpMethod.GET);
+            request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.send();
+            request.addEventListener(egret.Event.COMPLETE, function (event) {
+                var request = event.currentTarget;
+                var response = JSON.parse(request.response);
+                if (response.errcode) {
+                    this.openid = "";
+                }
+                else {
+                    this.openid = response.openid;
+                }
+                resolve();
+            }, _this);
+            request.addEventListener(egret.IOErrorEvent.IO_ERROR, function (event) {
+                this.openid = "";
+            }, _this);
+            request.addEventListener(egret.ProgressEvent.PROGRESS, function () {
+                this.openid = "";
+            }, _this);
         });
     };
     return RightPanel;

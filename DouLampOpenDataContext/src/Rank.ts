@@ -11,7 +11,7 @@ class Rank extends egret.DisplayObjectContainer{
         this.height = this.stage.stageHeight * 0.8;
         this.anchorOffsetX = this.width >> 1;
         this.x = this.stage.stageWidth >> 1;
-        this.y = 10;
+        this.y = 5;
         //为滚动视图添加背景色
         this.background = new egret.Shape();
         this.background.graphics.beginFill(0x363636, 1);

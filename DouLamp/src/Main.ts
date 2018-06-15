@@ -34,6 +34,7 @@ const Fruit_Header_Color = [0xFB459A,0x92E02A,0x92E02A,0x92E02A,0xFB459A,0xFB459
 const Fruit_Footer_Color = [0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d,0x5d1d1d]
 const Fruit_Excute_Order = [0,1,2,3,4,5,6,8,10,12,14,16,23,22,21,20,19,18,17,15,13,11,9,7];
 const APP_RANK_BACK = "rank_back_png";
+const APP_OPEN_ID_URL = "http://flow.go.gionee.com/wx/checkLogin.json";
 enum Fruit_ICON{
     Apple,
     Watermelon,
@@ -87,7 +88,6 @@ class Main extends egret.DisplayObjectContainer {
     private async runGame() {
         this.checkUpdate();
         this.shareGame();
-        this.obtainCreditFromCloud();
         await this.loadResource()
         this.createGameScene();
         const result = await RES.getResAsync("description_json");
@@ -100,6 +100,7 @@ class Main extends egret.DisplayObjectContainer {
             await RES.loadConfig("resource/default.res.json", "resource/");
             await RES.loadGroup("preload", 0, loadingView);
             this.stage.removeChild(loadingView);
+            
         }
         catch (e) {
             console.error(e);
@@ -183,17 +184,6 @@ class Main extends egret.DisplayObjectContainer {
                 desc: '日本战国时代，主要讲述的是初三女生日暮戈薇偶然通过自家神社的食骨之井穿越时空来到500年前的日本战国时代妖怪与人的混血半妖——犬夜叉，为寻找散落于各处的四魂之玉碎片而展开的冒险之旅',
         }
         })
-    }
-
-    private obtainCreditFromCloud(){
-         wx.getOpenDataContext().postMessage({
-             "obtain_score":true
-         })
-         wx.onMessage(data => {
-             if(data.is_self_score){
-                 console.log(data.score)
-             }
-         });
     }
 
 }

@@ -30,11 +30,13 @@ class Credit extends egret.DisplayObjectContainer{
         money_icon.scaleY = 0.8;
         this.addChild(money_icon);
 
-
+        let that = this;
         //credit范围筹码
-        this.creditItem =new CreditItem(200);
+        let score:string = <string>wx.getStorageSync("dou_lamp_rank_score");
+        console.log(score)
+        this.creditItem =new CreditItem(parseInt(score == ""?"200":score,0));
         this.addChild(this.creditItem);
-        this.creditItem.anchorOffsetY = this.creditItem.height;
+        this.creditItem.anchorOffsetY =this.creditItem.height;
         this.creditItem.y= (this.height/2)-15;
 
 
