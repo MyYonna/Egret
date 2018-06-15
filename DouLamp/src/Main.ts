@@ -180,8 +180,8 @@ class Main extends egret.DisplayObjectContainer {
         wx.onShareAppMessage(function () {
         // 用户点击了“转发”按钮
         return {
-                title: '犬夜叉之角色拼图',
-                desc: '日本战国时代，主要讲述的是初三女生日暮戈薇偶然通过自家神社的食骨之井穿越时空来到500年前的日本战国时代妖怪与人的混血半妖——犬夜叉，为寻找散落于各处的四魂之玉碎片而展开的冒险之旅',
+                title: '双碰水果机',
+                desc: '经典玩法',
         }
         })
     }
